@@ -309,35 +309,60 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               </div>
             </div>
 
-            {/* Незачёты с комментариями и фото */}
-            {issueItems.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Незачёты · комментарии и фото</p>
-                <div className="space-y-3">
-                  {issueItems.map((item, idx) => {
-                    const st = states[item.id];
-                    return (
-                      <div key={item.id} className="border border-destructive/25 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-start gap-2">
-                          <span className="w-5 h-5 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
-                            {idx + 1}
-                          </span>
-                          <p className="text-sm font-medium leading-snug">{item.text}</p>
-                        </div>
-                        {st.comment && (
-                          <p className="text-sm text-muted-foreground pl-7 italic">«{st.comment}»</p>
-                        )}
-                        {st.photo && (
-                          <div className="pl-7">
-                            <img src={st.photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+            {/* Незачёты с комментариями и фото — сгруппированы по секциям */}
+            {issueItems.length > 0 && (() => {
+              // Группируем по секции
+              const grouped: { section: string; items: typeof issueItems }[] = [];
+              issueItems.forEach((item) => {
+                const sec = item.section ?? 'Без секции';
+                const existing = grouped.find((g) => g.section === sec);
+                if (existing) existing.items.push(item);
+                else grouped.push({ section: sec, items: [item] });
+              });
+              let globalIdx = 0;
+              return (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Незачёты · комментарии и фото</p>
+                  <div className="space-y-5">
+                    {grouped.map((group) => (
+                      <div key={group.section}>
+                        {group.section !== 'Без секции' && (
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-primary">{group.section}</span>
+                            <div className="flex-1 h-px bg-primary/20" />
                           </div>
                         )}
+                        <div className="space-y-3">
+                          {group.items.map((item) => {
+                            const st = states[item.id];
+                            globalIdx += 1;
+                            const num = globalIdx;
+                            return (
+                              <div key={item.id} className="border border-destructive/25 rounded-2xl p-4 space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <span className="w-5 h-5 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
+                                    {num}
+                                  </span>
+                                  <p className="text-sm font-medium leading-snug">{item.text}</p>
+                                </div>
+                                {st.comment && (
+                                  <p className="text-sm text-muted-foreground pl-7 italic">«{st.comment}»</p>
+                                )}
+                                {st.photo && (
+                                  <div className="pl-7">
+                                    <img src={st.photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Подпись */}
             <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
