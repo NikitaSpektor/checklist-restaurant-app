@@ -16,6 +16,18 @@ export interface RunnerData {
   items: ChecklistItem[];
 }
 
+export interface CompletedCheck {
+  id: number;
+  title: string;
+  zone: string;
+  score: number;
+  by: string;
+  restaurant: string;
+  month: string;
+  time: string;
+  issues: number;
+}
+
 type Status = 'pending' | 'ok' | 'issue';
 
 interface ItemState {
@@ -47,7 +59,7 @@ const MONTHS = [
 
 const currentMonth = MONTHS[new Date().getMonth()];
 
-const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => void }) => {
+const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onClose: () => void; onComplete?: (c: CompletedCheck) => void }) => {
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [month, setMonth] = useState(currentMonth);
@@ -449,7 +461,20 @@ const ChecklistRunner = ({ data, onClose }: { data: RunnerData; onClose: () => v
           </div>
           <Button
             disabled={checked < data.items.length}
-            onClick={() => setFinished(true)}
+            onClick={() => {
+              setFinished(true);
+              onComplete?.({
+                id: Date.now(),
+                title: data.title,
+                zone: data.zone,
+                score,
+                by: finalAssignee,
+                restaurant,
+                month,
+                time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
+                issues,
+              });
+            }}
             className="rounded-full px-8 h-11 gap-2"
           >
             Завершить проверку

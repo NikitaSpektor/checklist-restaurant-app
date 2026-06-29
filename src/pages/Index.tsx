@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import ChecklistRunner, { RunnerData } from '@/components/ChecklistRunner';
+import ChecklistRunner, { RunnerData, CompletedCheck } from '@/components/ChecklistRunner';
 
 type Tab = 'active' | 'done' | 'templates' | 'stats';
 
@@ -152,10 +152,21 @@ const zoneScores = [
 const Index = () => {
   const [tab, setTab] = useState<Tab>('active');
   const [runner, setRunner] = useState<RunnerData | null>(null);
+  const [completed, setCompleted] = useState<CompletedCheck[]>([]);
+
+  const handleComplete = (c: CompletedCheck) => {
+    setCompleted((prev) => [c, ...prev]);
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {runner && <ChecklistRunner data={runner} onClose={() => setRunner(null)} />}
+      {runner && (
+        <ChecklistRunner
+          data={runner}
+          onClose={() => setRunner(null)}
+          onComplete={handleComplete}
+        />
+      )}
       {/* Header */}
       <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
@@ -251,21 +262,39 @@ const Index = () => {
         {/* Done */}
         {tab === 'done' && (
           <div className="grid gap-4 animate-scale-in">
-            {doneChecks.map((c) => (
-              <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-6 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold tabular-nums ${
+            {completed.length === 0 && doneChecks.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground">
+                <Icon name="ClipboardCheck" size={40} className="mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Завершённых проверок пока нет</p>
+                <p className="text-sm mt-1">Проведите первую проверку, чтобы она появилась здесь</p>
+              </div>
+            )}
+            {[...completed, ...doneChecks].map((c) => (
+              <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-6 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
                     c.score >= 90 ? 'bg-accent text-accent-foreground' : c.score >= 80 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
                   }`}>
-                    {c.score}
+                    <span className="text-lg leading-none">{c.score}</span>
+                    <span className="text-[10px] font-normal opacity-60">%</span>
                   </div>
                   <div>
-                    <Badge variant="secondary" className="rounded-full font-normal mb-1">{c.zone}</Badge>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="secondary" className="rounded-full font-normal">{c.zone}</Badge>
+                      {'issues' in c && c.issues > 0 && (
+                        <span className="text-xs text-destructive font-medium">{c.issues} незачёт</span>
+                      )}
+                    </div>
                     <h3 className="font-semibold tracking-tight">{c.title}</h3>
-                    <p className="text-sm text-muted-foreground">{c.by} · {c.time}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{c.by} · {c.time}</p>
+                    {'restaurant' in c && c.restaurant && (
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Icon name="MapPin" size={11} />{c.restaurant}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <Icon name="CircleCheck" size={22} className="text-primary shrink-0" />
+                <Icon name="CircleCheck" size={20} className="text-primary shrink-0 mt-1" />
               </div>
             ))}
           </div>
