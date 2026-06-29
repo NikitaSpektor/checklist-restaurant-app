@@ -142,12 +142,14 @@ const Index = () => {
       <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
-              <Icon name="UtensilsCrossed" size={18} />
-            </div>
-            <div className="leading-tight">
+            <img
+              src="https://cdn.poehali.dev/projects/da861bac-1ea4-49ae-b39c-72c9841ade32/bucket/0587e8cf-1680-4a82-baf6-adff85516944.png"
+              alt="ICONFOOD"
+              className="h-8 w-auto object-contain"
+            />
+            <div className="leading-tight hidden sm:block">
               <p className="font-semibold text-sm tracking-tight">Контроль качества</p>
-              <p className="text-[11px] text-muted-foreground">Ресторан «Поехали»</p>
+              <p className="text-[11px] text-muted-foreground">Ресторанный холдинг ICONFOOD</p>
             </div>
           </div>
           <Button
@@ -310,7 +312,7 @@ const Index = () => {
       </main>
 
       <footer className="max-w-5xl mx-auto px-5 sm:px-8 py-8 text-center text-xs text-muted-foreground">
-        Контроль качества ресторана · первая версия
+        Ресторанный холдинг ICONFOOD · Контроль качества
       </footer>
     </div>
   );
