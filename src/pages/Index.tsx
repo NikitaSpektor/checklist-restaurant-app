@@ -350,25 +350,25 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
+      <main className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-14">
         {/* Hero */}
-        <div className="mb-10 animate-fade-in">
+        <div className="mb-6 sm:mb-10 animate-fade-in">
           <p className="text-primary text-sm font-medium mb-2">Сегодня · 29 июня</p>
-          <h1 className="font-display text-5xl sm:text-6xl font-medium tracking-tight leading-[1.05]">
+          <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.1]">
             Чистота и порядок —<br />под контролем.
           </h1>
-          <p className="text-muted-foreground mt-4 max-w-md">
+          <p className="text-muted-foreground mt-3 text-sm sm:text-base max-w-md">
             Проводите проверки по зонам, фиксируйте нарушения фотографиями и следите за качеством в реальном времени.
           </p>
         </div>
 
         {/* Tabs */}
-        <nav className="flex gap-1.5 p-1.5 bg-secondary/60 rounded-2xl w-fit mb-8 overflow-x-auto">
+        <nav className="flex gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-secondary/60 rounded-2xl w-full sm:w-fit mb-6 sm:mb-8 overflow-x-auto">
           {NAV.map((n) => (
             <button
               key={n.id}
               onClick={() => setTab(n.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                 tab === n.id
                   ? 'bg-card shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -429,7 +429,7 @@ const Index = () => {
               </div>
             )}
             {[...completed, ...doneChecks].map((c) => (
-              <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-6 flex items-start justify-between gap-4">
+              <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-6 flex items-start justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-4">
                   <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
                     c.score >= 4 ? 'bg-accent text-accent-foreground' : c.score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
@@ -496,11 +496,11 @@ const Index = () => {
         {/* Stats */}
         {tab === 'stats' && (
           <div className="animate-scale-in space-y-8">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((s) => (
-                <div key={s.label} className="bg-card border border-border/70 rounded-3xl p-5">
-                  <Icon name={s.icon} size={20} className="text-primary mb-3" />
-                  <p className="text-3xl font-semibold tracking-tight tabular-nums">{s.value}</p>
+                <div key={s.label} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-5">
+                  <Icon name={s.icon} size={18} className="text-primary mb-2 sm:mb-3" />
+                  <p className="text-2xl sm:text-3xl font-semibold tracking-tight tabular-nums">{s.value}</p>
                   <p className="text-sm font-medium mt-1">{s.label}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{s.sub}</p>
                 </div>
@@ -511,7 +511,7 @@ const Index = () => {
               <div className="space-y-4">
                 {zoneScores.map((z) => (
                   <div key={z.zone} className="flex items-center gap-4">
-                    <span className="text-sm w-20 shrink-0">{z.zone}</span>
+                    <span className="text-sm w-24 shrink-0 truncate">{z.zone}</span>
                     <Progress value={z.score} className="h-2.5" />
                     <span className="text-sm font-medium tabular-nums w-10 text-right">{z.score}%</span>
                   </div>

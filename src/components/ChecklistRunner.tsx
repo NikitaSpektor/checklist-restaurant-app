@@ -138,7 +138,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-5 sm:px-8 py-8">
-            <h2 className="font-display text-4xl font-medium tracking-tight mb-2">Перед началом<br/>проверки</h2>
+            <h2 className="font-display text-3xl sm:text-4xl font-medium tracking-tight mb-2">Перед началом<br/>проверки</h2>
             <p className="text-muted-foreground text-sm mb-8">Заполните данные — они войдут в итоговый отчёт</p>
 
             <div className="space-y-5">
@@ -285,34 +285,34 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           <div id="print-report" className="max-w-2xl mx-auto px-5 sm:px-8 py-8 space-y-6">
 
             {/* Логотип + заголовок */}
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
                 <img
                   src="https://cdn.poehali.dev/projects/da861bac-1ea4-49ae-b39c-72c9841ade32/bucket/0587e8cf-1680-4a82-baf6-adff85516944.png"
                   alt="ICONFOOD"
-                  className="h-7 w-auto object-contain mb-3"
+                  className="h-6 sm:h-7 w-auto object-contain mb-2 sm:mb-3"
                 />
-                <h1 className="font-display text-3xl font-medium tracking-tight">{data.title}</h1>
-                <p className="text-muted-foreground text-sm mt-1">{restaurant} · {month} {year} · {dateStr}</p>
+                <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">{data.title}</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1 break-words">{restaurant} · {month} {year} · {dateStr}</p>
               </div>
-              <div className={`w-20 h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums ${
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums ${
                 score >= 4 ? 'bg-accent text-accent-foreground' : score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
               }`}>
-                <span className="text-2xl leading-none">{score}</span>
-                <span className="text-[11px] font-normal mt-0.5 opacity-70">из 5</span>
+                <span className="text-xl sm:text-2xl leading-none">{score}</span>
+                <span className="text-[10px] sm:text-[11px] font-normal mt-0.5 opacity-70">из 5</span>
               </div>
             </div>
 
             {/* Мета-строка */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { icon: 'User', label: 'Проверяющий', value: finalAssignee },
                 { icon: 'CheckCheck', label: 'Зачёт', value: `${okCount} из ${data.items.length}` },
                 { icon: 'X', label: 'Незачёт', value: String(issues) },
               ].map((m) => (
-                <div key={m.label} className="bg-secondary/50 rounded-2xl p-4">
+                <div key={m.label} className="bg-secondary/50 rounded-2xl p-3 sm:p-4">
                   <Icon name={m.icon} size={16} className="text-muted-foreground mb-2" />
-                  <p className="text-lg font-semibold tabular-nums">{m.value}</p>
+                  <p className="text-sm sm:text-lg font-semibold tabular-nums leading-tight">{m.value}</p>
                   <p className="text-xs text-muted-foreground">{m.label}</p>
                 </div>
               ))}
@@ -415,7 +415,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
 
             {/* Итоговый штраф */}
             {hasFines && (
-              <div className={`rounded-2xl p-5 flex items-center justify-between ${totalFine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
+              <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${totalFine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
                   {isStandards && <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>}
@@ -430,7 +430,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             )}
 
             {/* Подпись */}
-            <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-muted-foreground">
               <span>Ресторанный холдинг ICONFOOD</span>
               <span>{dateStr}</span>
             </div>
@@ -490,7 +490,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   </div>
                 )}
               <div
-                className={`bg-card border rounded-3xl p-5 transition-all ${
+                className={`bg-card border rounded-3xl p-4 sm:p-5 transition-all ${
                   st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
                 }`}
               >
@@ -506,7 +506,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   </div>
                 </div>
 
-                <div className={`flex gap-2 mt-4 pl-8 ${isStandards ? 'flex-wrap' : ''}`}>
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-4 pl-6 sm:pl-8">
                   <button
                     onClick={() => set(item.id, { status: st.status === 'ok' ? 'pending' : 'ok' })}
                     className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all ${
@@ -536,7 +536,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 </div>
 
                 {st.status === 'issue' && (
-                  <div className="mt-3 pl-8 space-y-3 animate-fade-in">
+                  <div className="mt-3 pl-6 sm:pl-8 space-y-3 animate-fade-in">
                     <Textarea
                       placeholder="Комментарий к незачёту…"
                       value={st.comment}
@@ -554,7 +554,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                     />
                     {st.photo ? (
                       <div className="relative inline-block">
-                        <img src={st.photo} alt="нарушение" className="h-28 w-28 object-cover rounded-2xl" />
+                        <img src={st.photo} alt="нарушение" className="h-32 w-32 sm:h-28 sm:w-28 object-cover rounded-2xl" />
                         <button
                           onClick={() => set(item.id, { photo: undefined })}
                           className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
@@ -581,8 +581,8 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
 
       {/* Footer */}
       <footer className="border-t border-border/60 bg-background/80 backdrop-blur-xl shrink-0">
-        <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-sm flex-wrap">
+        <div className="max-w-2xl mx-auto px-4 sm:px-8 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 text-sm flex-wrap">
             <span className="flex items-center gap-1.5 text-primary font-medium"><Icon name="Check" size={15} />{okCount} зачёт</span>
             <span className="flex items-center gap-1.5 text-destructive font-medium"><Icon name="X" size={15} />{issues} незачёт</span>
             {checked > 0 && (
@@ -613,7 +613,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 fine: hasFines ? totalFine : undefined,
               });
             }}
-            className="rounded-full px-8 h-11 gap-2"
+            className="rounded-full px-6 sm:px-8 h-11 gap-2 w-full sm:w-auto"
           >
             Завершить проверку
             <Icon name="ArrowRight" size={16} />
