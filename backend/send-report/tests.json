@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Missing recipients returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"recipients": [], "report": {"title": "Test"}},
+      "expectedStatus": 400
+    }
+  ]
+}

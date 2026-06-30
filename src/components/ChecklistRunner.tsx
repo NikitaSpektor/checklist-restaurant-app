@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -89,7 +89,28 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const finalAssignee = `${lastName} ${firstName}`.trim();
   const canStart = lastName.trim() && firstName.trim() && restaurant;
   const [finished, setFinished] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
+
+  const ALL_RECIPIENTS = [
+    'spektor@iconfood.ru', 'sysoev@iconfood.ru', 'gavrilova@iconfood.ru',
+    'e.metla@iconfood.ru', 'anufriev@iconfood.ru', 'genkin@iconfood.ru',
+    'larionov@iconfood.ru', 'gukasyan@iconfood.ru', 'kopichuk@iconfood.ru',
+    'kashnikov@iconfood.ru', 'garaeva@iconfood.ru', 'lipatov@iconfood.ru',
+    'lysenko@iconfood.ru', 'sidanov@iconfood.ru', 'maslova@iconfood.ru',
+    'bozhkova@iconfood.ru', 'akramova@iconfood.ru', 'chernyshev@iconfood.ru',
+    'dvoeglazov@blackmarketcafe.ru', 'semyonova@iconfood.ru', 'd.solovyova@iconfood.ru',
+  ];
+
+  const toggleRecipient = useCallback((email: string) => {
+    setSelectedRecipients((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+    );
+  }, []);
 
 
   const set = (id: number, patch: Partial<ItemState>) =>
@@ -264,6 +285,36 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     const now = new Date();
     const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
+    const sendReport = async () => {
+      setSendStatus('sending');
+      try {
+        const report = {
+          title: data.title,
+          zone: data.zone,
+          restaurant,
+          month: `${month} ${year}`,
+          time: now.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
+          by: finalAssignee,
+          score,
+          ok_count: okCount,
+          issues_count: issues,
+          total: data.items.length,
+          fine: hasFines ? totalFine : null,
+          items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
+          issues: issueItems.map((item) => ({ text: item.text, comment: states[item.id].comment || '' })),
+        };
+        const res = await fetch(SEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipients: selectedRecipients, report }),
+        });
+        if (res.ok) { setSendStatus('ok'); setEmailOpen(false); }
+        else setSendStatus('error');
+      } catch {
+        setSendStatus('error');
+      }
+    };
+
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
         {/* Шапка */}
@@ -437,15 +488,74 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           </div>
         </div>
 
+        {/* Панель выбора получателей */}
+        {emailOpen && (
+          <div className="border-t border-border/60 bg-secondary/30 print:hidden">
+            <div className="max-w-2xl mx-auto px-4 sm:px-8 py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">Выберите получателей</p>
+                <button onClick={() => setEmailOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <Icon name="X" size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-52 overflow-y-auto pr-1">
+                {ALL_RECIPIENTS.map((email) => (
+                  <button
+                    key={email}
+                    onClick={() => toggleRecipient(email)}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-left transition-all ${
+                      selectedRecipients.includes(email)
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'bg-card border border-border/60 text-foreground hover:border-primary/30'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${
+                      selectedRecipients.includes(email) ? 'border-primary bg-primary' : 'border-border'
+                    }`}>
+                      {selectedRecipients.includes(email) && <Icon name="Check" size={10} className="text-primary-foreground" />}
+                    </div>
+                    <span className="truncate">{email.split('@')[0]}</span>
+                    <span className="text-muted-foreground text-xs truncate">@{email.split('@')[1]}</span>
+                  </button>
+                ))}
+              </div>
+              {sendStatus === 'error' && (
+                <p className="text-xs text-destructive flex items-center gap-1.5">
+                  <Icon name="CircleAlert" size={13} /> Ошибка отправки. Проверьте настройки почты.
+                </p>
+              )}
+              {sendStatus === 'ok' && (
+                <p className="text-xs text-primary flex items-center gap-1.5">
+                  <Icon name="CircleCheck" size={13} /> Отчёт отправлен на {selectedRecipients.length} адрес{selectedRecipients.length === 1 ? '' : 'а'}!
+                </p>
+              )}
+              <Button
+                className="w-full rounded-full h-10 gap-2"
+                disabled={selectedRecipients.length === 0 || sendStatus === 'sending'}
+                onClick={sendReport}
+              >
+                {sendStatus === 'sending'
+                  ? <><Icon name="Loader" size={15} className="animate-spin" /> Отправляем…</>
+                  : <><Icon name="Send" size={15} /> Отправить {selectedRecipients.length > 0 ? `(${selectedRecipients.length})` : ''}</>
+                }
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Футер */}
         <footer className="border-t border-border/60 bg-background shrink-0 print:hidden">
-          <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex gap-3">
+          <div className="max-w-2xl mx-auto px-4 sm:px-8 py-4 flex gap-3">
             <Button variant="outline" className="flex-1 rounded-full h-11" onClick={onClose}>
               Закрыть
             </Button>
+            <Button variant="outline" className="flex-1 rounded-full h-11 gap-2" onClick={() => { setEmailOpen((v) => !v); setSendStatus('idle'); }}>
+              <Icon name="Mail" size={16} />
+              На email
+            </Button>
             <Button className="flex-1 rounded-full h-11 gap-2" onClick={() => window.print()}>
               <Icon name="FileDown" size={16} />
-              Скачать PDF
+              PDF
             </Button>
           </div>
         </footer>
