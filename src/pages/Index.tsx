@@ -282,7 +282,14 @@ const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты',
 const Index = () => {
   const [tab, setTab] = useState<Tab>('active');
   const [runner, setRunner] = useState<RunnerData | null>(null);
-  const [completed, setCompleted] = useState<CompletedCheck[]>([]);
+  const [completed, setCompleted] = useState<CompletedCheck[]>(() => {
+    try {
+      const saved = localStorage.getItem('completed_checks');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const stats = useMemo(() => {
     const total = completed.length;
@@ -307,7 +314,11 @@ const Index = () => {
   }), [completed]);
 
   const handleComplete = (c: CompletedCheck) => {
-    setCompleted((prev) => [c, ...prev]);
+    setCompleted((prev) => {
+      const next = [c, ...prev];
+      try { localStorage.setItem('completed_checks', JSON.stringify(next)); } catch (e) { /* ignore */ }
+      return next;
+    });
   };
 
   return (
