@@ -359,13 +359,7 @@ const Index = () => {
               <p className="text-[11px] text-muted-foreground">Ресторанный холдинг ICONFOOD</p>
             </div>
           </div>
-          <Button
-            className="rounded-full gap-2 h-10 px-5 shadow-sm"
-            onClick={() => setRunner(buildRunner('Кухня', 'Чек-лист кухни'))}
-          >
-            <Icon name="Plus" size={16} />
-            Новая проверка
-          </Button>
+
         </div>
       </header>
 
