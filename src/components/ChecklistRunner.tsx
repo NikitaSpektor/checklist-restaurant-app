@@ -9,6 +9,7 @@ export interface ChecklistItem {
   id: number;
   text: string;
   section?: string;
+  fine?: number;
 }
 
 export interface RunnerData {
@@ -97,10 +98,12 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(1)))
     : 5;
   const isStandards = data.zone === 'Стандарты';
-  const totalFine = isStandards
+  const isKitchen = data.zone === 'Кухня';
+  const hasFines = isStandards || isKitchen;
+  const totalFine = hasFines
     ? data.items
         .filter((i) => states[i.id].status === 'issue')
-        .reduce((sum, i) => sum + getFine(i.section), 0)
+        .reduce((sum, i) => sum + (i.fine ?? (isStandards ? getFine(i.section) : 0)), 0)
     : 0;
 
   const onFile = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -384,12 +387,13 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               );
             })()}
 
-            {/* Итоговый штраф для зоны Стандарты */}
-            {isStandards && (
+            {/* Итоговый штраф */}
+            {hasFines && (
               <div className={`rounded-2xl p-5 flex items-center justify-between ${totalFine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
-                  <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>
+                  {isStandards && <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>}
+                  {isKitchen && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
                 </div>
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
                   {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
@@ -464,7 +468,14 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xs font-medium text-muted-foreground tabular-nums mt-1.5 w-5 shrink-0">{idx + 1}</span>
-                  <p className={`flex-1 font-medium leading-snug ${st.status === 'na' ? 'line-through text-muted-foreground' : ''}`}>{item.text}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium leading-snug ${st.status === 'na' ? 'line-through text-muted-foreground' : ''}`}>{item.text}</p>
+                    {hasFines && item.fine && (
+                      <span className="inline-block mt-1 text-[11px] font-medium text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
+                        незачёт: −{item.fine.toLocaleString('ru-RU')} ₽
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className={`flex gap-2 mt-4 pl-8 ${isStandards ? 'flex-wrap' : ''}`}>
@@ -551,7 +562,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 {score} <span className="text-muted-foreground font-normal text-xs">/ 5</span>
               </span>
             )}
-            {isStandards && totalFine > 0 && (
+            {hasFines && totalFine > 0 && (
               <span className="flex items-center gap-1.5 font-semibold text-destructive tabular-nums border border-destructive/30 rounded-full px-2.5 py-0.5">
                 <Icon name="CircleMinus" size={14} />−{totalFine.toLocaleString('ru-RU')} ₽
               </span>
