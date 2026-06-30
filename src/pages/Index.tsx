@@ -317,6 +317,14 @@ const Index = () => {
     });
   };
 
+  const handleDelete = (id: number) => {
+    setCompleted((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      try { localStorage.setItem('completed_checks', JSON.stringify(next)); } catch (e) { /* ignore */ }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {runner && (
@@ -430,14 +438,14 @@ const Index = () => {
             )}
             {[...completed, ...doneChecks].map((c) => (
               <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-6 flex items-start justify-between gap-3 sm:gap-4">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
                     c.score >= 4 ? 'bg-accent text-accent-foreground' : c.score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
                   }`}>
                     <span className="text-lg leading-none">{c.score}</span>
                     <span className="text-[10px] font-normal opacity-60">из 5</span>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <Badge variant="secondary" className="rounded-full font-normal">{c.zone}</Badge>
                       {'issues' in c && c.issues > 0 && (
@@ -458,7 +466,18 @@ const Index = () => {
                     )}
                   </div>
                 </div>
-                <Icon name="CircleCheck" size={20} className="text-primary shrink-0 mt-1" />
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  <Icon name="CircleCheck" size={20} className="text-primary" />
+                  {'id' in c && completed.some((x) => x.id === c.id) && (
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      title="Удалить"
+                    >
+                      <Icon name="Trash2" size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
