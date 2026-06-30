@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -277,25 +277,34 @@ const templates = [
   { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', items: 25, icon: 'GlassWater', color: '170 40% 42%' },
 ];
 
-const stats = [
-  { label: 'Проверок за месяц', value: '0', sub: 'нет данных', icon: 'TrendingUp' },
-  { label: 'Средний балл', value: '—', sub: 'по всем зонам', icon: 'Gauge' },
-  { label: 'Открытых нарушений', value: '0', sub: 'нет данных', icon: 'TriangleAlert' },
-  { label: 'Фото-фиксаций', value: '0', sub: 'за неделю', icon: 'Camera' },
-];
-
-const zoneScores = [
-  { zone: 'Бар', score: 0 },
-  { zone: 'Кухня', score: 0 },
-  { zone: 'Кондитер', score: 0 },
-  { zone: 'Стандарты', score: 0 },
-  { zone: 'Оценка напитков', score: 0 },
-];
+const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков'];
 
 const Index = () => {
   const [tab, setTab] = useState<Tab>('active');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
+
+  const stats = useMemo(() => {
+    const total = completed.length;
+    const avgScore = total
+      ? Math.round((completed.reduce((s, c) => s + c.score, 0) / total) * 20)
+      : null;
+    const totalIssues = completed.reduce((s, c) => s + (c.issues ?? 0), 0);
+    return [
+      { label: 'Проверок за месяц', value: String(total), sub: total ? `всего завершено` : 'нет данных', icon: 'TrendingUp' },
+      { label: 'Средний балл', value: avgScore != null ? `${avgScore}%` : '—', sub: 'по всем зонам', icon: 'Gauge' },
+      { label: 'Открытых нарушений', value: String(totalIssues), sub: totalIssues ? `из ${total} проверок` : 'нет данных', icon: 'TriangleAlert' },
+      { label: 'Фото-фиксаций', value: '0', sub: 'за неделю', icon: 'Camera' },
+    ];
+  }, [completed]);
+
+  const zoneScores = useMemo(() => ZONES.map((zone) => {
+    const checks = completed.filter((c) => c.zone === zone);
+    const score = checks.length
+      ? Math.round((checks.reduce((s, c) => s + c.score, 0) / checks.length) * 20)
+      : 0;
+    return { zone, score };
+  }), [completed]);
 
   const handleComplete = (c: CompletedCheck) => {
     setCompleted((prev) => [c, ...prev]);
