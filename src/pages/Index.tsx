@@ -267,11 +267,7 @@ const activeChecks = [
   { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', done: 3, total: 12, by: 'О. Смирнова', time: 'сегодня, 10:05', issues: 2 },
 ];
 
-const doneChecks = [
-  { id: 4, zone: 'Стандарты', title: 'Чек-лист стандартов', score: 100, by: 'М. Левина', time: 'вчера, 22:10' },
-  { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', score: 92, by: 'И. Чен', time: 'вчера, 18:20' },
-  { id: 6, zone: 'Кухня', title: 'Чек-лист кухни', score: 86, by: 'А. Соколов', time: 'вчера, 08:50' },
-];
+const doneChecks: { id: number; zone: string; title: string; score: number; by: string; time: string }[] = [];
 
 const templates = [
   { id: 1, zone: 'Бар', title: 'Чек-лист бара', items: 31, icon: 'Wine', color: '280 30% 50%' },
@@ -282,18 +278,18 @@ const templates = [
 ];
 
 const stats = [
-  { label: 'Проверок за месяц', value: '148', sub: '+12% к прошлому', icon: 'TrendingUp' },
-  { label: 'Средний балл', value: '91%', sub: 'по всем зонам', icon: 'Gauge' },
-  { label: 'Открытых нарушений', value: '7', sub: '3 критичных', icon: 'TriangleAlert' },
-  { label: 'Фото-фиксаций', value: '34', sub: 'за неделю', icon: 'Camera' },
+  { label: 'Проверок за месяц', value: '0', sub: 'нет данных', icon: 'TrendingUp' },
+  { label: 'Средний балл', value: '—', sub: 'по всем зонам', icon: 'Gauge' },
+  { label: 'Открытых нарушений', value: '0', sub: 'нет данных', icon: 'TriangleAlert' },
+  { label: 'Фото-фиксаций', value: '0', sub: 'за неделю', icon: 'Camera' },
 ];
 
 const zoneScores = [
-  { zone: 'Бар', score: 96 },
-  { zone: 'Кухня', score: 91 },
-  { zone: 'Кондитер', score: 84 },
-  { zone: 'Стандарты', score: 97 },
-  { zone: 'Оценка напитков', score: 89 },
+  { zone: 'Бар', score: 0 },
+  { zone: 'Кухня', score: 0 },
+  { zone: 'Кондитер', score: 0 },
+  { zone: 'Стандарты', score: 0 },
+  { zone: 'Оценка напитков', score: 0 },
 ];
 
 const Index = () => {
