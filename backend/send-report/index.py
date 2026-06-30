@@ -1,4 +1,4 @@
-# smtp.mail.ru / port 465
+# smtp.mail.ru / port 465 / app password
 import json
 import os
 import smtplib
