@@ -261,11 +261,7 @@ const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: 'stats', label: 'Статистика', icon: 'BarChart3' },
 ];
 
-const activeChecks = [
-  { id: 1, zone: 'Кухня', title: 'Чек-лист кухни', done: 9, total: 14, by: 'А. Соколов', time: 'сегодня, 09:14', issues: 1 },
-  { id: 2, zone: 'Бар', title: 'Чек-лист бара', done: 5, total: 12, by: 'И. Чен', time: 'сегодня, 09:40', issues: 0 },
-  { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', done: 3, total: 12, by: 'О. Смирнова', time: 'сегодня, 10:05', issues: 2 },
-];
+const activeChecks: { id: number; zone: string; title: string; done: number; total: number; by: string; time: string; issues: number }[] = [];
 
 const doneChecks: { id: number; zone: string; title: string; score: number; by: string; time: string }[] = [];
 
