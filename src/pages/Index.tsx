@@ -287,27 +287,38 @@ const Index = () => {
     }
   });
 
+  const [statsRestaurant, setStatsRestaurant] = useState<string>('all');
+
+  const restaurants = useMemo(() => {
+    const set = new Set(completed.map((c) => c.restaurant).filter(Boolean));
+    return Array.from(set).sort();
+  }, [completed]);
+
+  const filteredCompleted = useMemo(() =>
+    statsRestaurant === 'all' ? completed : completed.filter((c) => c.restaurant === statsRestaurant),
+  [completed, statsRestaurant]);
+
   const stats = useMemo(() => {
-    const total = completed.length;
+    const total = filteredCompleted.length;
     const avgScore = total
-      ? Math.round((completed.reduce((s, c) => s + c.score, 0) / total) * 20)
+      ? Math.round((filteredCompleted.reduce((s, c) => s + c.score, 0) / total) * 20)
       : null;
-    const totalIssues = completed.reduce((s, c) => s + (c.issues ?? 0), 0);
+    const totalIssues = filteredCompleted.reduce((s, c) => s + (c.issues ?? 0), 0);
     return [
-      { label: 'Проверок за месяц', value: String(total), sub: total ? `всего завершено` : 'нет данных', icon: 'TrendingUp' },
+      { label: 'Проверок всего', value: String(total), sub: total ? 'завершено' : 'нет данных', icon: 'TrendingUp' },
       { label: 'Средний балл', value: avgScore != null ? `${avgScore}%` : '—', sub: 'по всем зонам', icon: 'Gauge' },
       { label: 'Открытых нарушений', value: String(totalIssues), sub: totalIssues ? `из ${total} проверок` : 'нет данных', icon: 'TriangleAlert' },
       { label: 'Фото-фиксаций', value: '0', sub: 'за неделю', icon: 'Camera' },
     ];
-  }, [completed]);
+  }, [filteredCompleted]);
 
   const zoneScores = useMemo(() => ZONES.map((zone) => {
-    const checks = completed.filter((c) => c.zone === zone);
+    const checks = filteredCompleted.filter((c) => c.zone === zone);
     const score = checks.length
       ? Math.round((checks.reduce((s, c) => s + c.score, 0) / checks.length) * 20)
       : 0;
     return { zone, score };
-  }), [completed]);
+  }), [filteredCompleted]);
 
   const handleComplete = (c: CompletedCheck) => {
     setCompleted((prev) => {
@@ -514,7 +525,31 @@ const Index = () => {
 
         {/* Stats */}
         {tab === 'stats' && (
-          <div className="animate-scale-in space-y-8">
+          <div className="animate-scale-in space-y-6">
+            {/* Фильтр по ресторанам */}
+            {restaurants.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setStatsRestaurant('all')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    statsRestaurant === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                  }`}
+                >
+                  Все рестораны
+                </button>
+                {restaurants.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setStatsRestaurant(r)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      statsRestaurant === r ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((s) => (
                 <div key={s.label} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-5">
