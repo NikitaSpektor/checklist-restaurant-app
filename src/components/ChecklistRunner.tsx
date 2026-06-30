@@ -119,10 +119,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const checked = data.items.filter((i) => states[i.id].status !== 'pending').length;
   const okCount = data.items.filter((i) => states[i.id].status === 'ok').length;
   const issues = data.items.filter((i) => states[i.id].status === 'issue').length;
-  const score = data.items.length
-    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(1)))
-    : 5;
   const isStandards = data.zone === 'Стандарты';
+  const scorePrecision = isStandards ? 2 : 1;
+  const score = data.items.length
+    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(scorePrecision)))
+    : 5;
   const isKitchen = data.zone === 'Кухня';
   const isPastry = data.zone === 'Кондитер';
   const isBar = data.zone === 'Бар';
