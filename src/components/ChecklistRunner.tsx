@@ -674,7 +674,6 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                     <input
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       className="hidden"
                       ref={(el) => (fileRefs.current[item.id] = el)}
                       onChange={(e) => onFile(item.id, e)}
