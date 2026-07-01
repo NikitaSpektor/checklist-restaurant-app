@@ -42,13 +42,18 @@ def handler(event: dict, context) -> dict:
         aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
         aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
     )
-    s3.put_object(
-        Bucket='files',
-        Key=key,
-        Body=image_data,
-        ContentType=f'image/{ext}',
-        ACL='public-read',
-    )
+    print(f"Uploading {key}, size={len(image_data)}")
+    try:
+        s3.put_object(
+            Bucket='files',
+            Key=key,
+            Body=image_data,
+            ContentType=f'image/{ext}',
+        )
+        print(f"Upload OK: {key}")
+    except Exception as e:
+        print(f"S3 ERROR: {type(e).__name__}: {e}")
+        return {'statusCode': 500, 'headers': cors, 'body': json.dumps({'error': str(e)})}
 
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
     return {'statusCode': 200, 'headers': cors, 'body': json.dumps({'url': cdn_url})}

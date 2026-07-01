@@ -179,8 +179,14 @@ def handler(event: dict, context) -> dict:
     msg["To"] = ", ".join(valid)
     msg.attach(MIMEText(html, "html", "utf-8"))
 
-    with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-        server.login(smtp_user, smtp_pass)
-        server.sendmail(smtp_user, valid, msg.as_string())
+    print(f"SMTP connect: {smtp_host}:{smtp_port} user={smtp_user}")
+    try:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=ssl.create_default_context()) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, valid, msg.as_string())
+            print(f"SMTP sent OK to {valid}")
+    except Exception as e:
+        print(f"SMTP ERROR: {type(e).__name__}: {e}")
+        return {"statusCode": 500, "headers": {"Access-Control-Allow-Origin": "*"}, "body": json.dumps({"error": str(e)})}
 
     return {"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "*"}, "body": json.dumps({"ok": True, "sent_to": valid})}

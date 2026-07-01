@@ -303,14 +303,18 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     const now = new Date();
     const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
-    const uploadPhoto = async (base64: string): Promise<string> => {
-      const res = await fetch(UPLOAD_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photo: base64 }),
-      });
-      const json = await res.json();
-      return json.url || base64;
+    const uploadPhoto = async (base64: string): Promise<string | null> => {
+      try {
+        const res = await fetch(UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo: base64 }),
+        });
+        const data = await res.json();
+        return data.url || null;
+      } catch {
+        return null;
+      }
     };
 
     const sendReport = async () => {
