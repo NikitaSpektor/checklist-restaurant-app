@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -275,18 +275,32 @@ const templates = [
 
 const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков'];
 
+const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
+
 const Index = () => {
   const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
-  const [completed, setCompleted] = useState<CompletedCheck[]>(() => {
+  const [completed, setCompleted] = useState<CompletedCheck[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchChecks = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('completed_checks');
-      return saved ? JSON.parse(saved) : [];
+      const res = await fetch(CHECKS_URL);
+      const raw = await res.json();
+      const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      setCompleted(Array.isArray(data) ? data : []);
     } catch {
-      return [];
+      try {
+        const saved = localStorage.getItem('completed_checks');
+        if (saved) setCompleted(JSON.parse(saved));
+      } catch { /* ignore */ }
+    } finally {
+      setLoading(false);
     }
-  });
+  }, []);
+
+  useEffect(() => { fetchChecks(); }, [fetchChecks]);
 
   const [statsRestaurant, setStatsRestaurant] = useState<string>('all');
 
@@ -321,20 +335,22 @@ const Index = () => {
     return { zone, score };
   }), [filteredCompleted]);
 
-  const handleComplete = (c: CompletedCheck) => {
-    setCompleted((prev) => {
-      const next = [c, ...prev];
-      try { localStorage.setItem('completed_checks', JSON.stringify(next)); } catch (e) { /* ignore */ }
-      return next;
-    });
+  const handleComplete = async (c: CompletedCheck) => {
+    setCompleted((prev) => [c, ...prev]);
+    try {
+      await fetch(CHECKS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(c),
+      });
+    } catch { /* ignore */ }
   };
 
-  const handleDelete = (id: number) => {
-    setCompleted((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      try { localStorage.setItem('completed_checks', JSON.stringify(next)); } catch (e) { /* ignore */ }
-      return next;
-    });
+  const handleDelete = async (id: number) => {
+    setCompleted((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await fetch(`${CHECKS_URL}?id=${id}`, { method: 'DELETE' });
+    } catch { /* ignore */ }
   };
 
   return (
@@ -445,14 +461,20 @@ const Index = () => {
         {/* Done */}
         {tab === 'done' && (
           <div className="grid gap-4 animate-scale-in">
-            {completed.length === 0 && doneChecks.length === 0 && (
+            {loading && (
+              <div className="text-center py-16 text-muted-foreground">
+                <Icon name="Loader" size={32} className="mx-auto mb-3 opacity-40 animate-spin" />
+                <p className="text-sm">Загрузка проверок...</p>
+              </div>
+            )}
+            {!loading && completed.length === 0 && doneChecks.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
                 <Icon name="ClipboardCheck" size={40} className="mx-auto mb-3 opacity-30" />
                 <p className="font-medium">Завершённых проверок пока нет</p>
                 <p className="text-sm mt-1">Проведите первую проверку, чтобы она появилась здесь</p>
               </div>
             )}
-            {[...completed, ...doneChecks].map((c) => (
+            {!loading && [...completed, ...doneChecks].map((c) => (
               <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-6 flex items-start justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
