@@ -373,7 +373,7 @@ const Index = () => {
       <main className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-14">
         {/* Hero */}
         <div className="mb-6 sm:mb-10 animate-fade-in">
-          <p className="text-primary text-sm font-medium mb-2">Сегодня · 29 июня</p>
+          <p className="text-primary text-sm font-medium mb-2">Сегодня · {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</p>
           <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.1]">
             Чистота и порядок —<br />под контролем.
           </h1>
