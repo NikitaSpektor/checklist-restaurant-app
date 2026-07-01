@@ -315,7 +315,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           total: data.items.length,
           fine: hasFines ? totalFine : null,
           items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
-          issues: issueItems.map((item) => ({ text: item.text, comment: states[item.id].comment || '' })),
+          issues: issueItems.map((item) => ({ text: item.text, comment: states[item.id].comment || '', photo: states[item.id].photo || null })),
         };
         const res = await fetch(SEND_URL, {
           method: 'POST',

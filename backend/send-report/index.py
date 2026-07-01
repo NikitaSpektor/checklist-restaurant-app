@@ -40,10 +40,12 @@ def build_html(report: dict) -> str:
     issues_rows = ""
     for item in report.get("issues", []):
         comment = item.get("comment", "")
+        photo = item.get("photo", None)
+        photo_html = f'<br><img src="{photo}" style="margin-top:8px;max-width:320px;max-height:240px;border-radius:8px;display:block;" />' if photo else ""
         issues_rows += f"""
         <tr>
           <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:14px;color:#3d2f22;">{item.get("text","")}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:13px;color:#6b5745;font-style:italic;">{comment if comment else "—"}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:13px;color:#6b5745;font-style:italic;">{comment if comment else "—"}{photo_html}</td>
         </tr>"""
 
     items_rows = ""
