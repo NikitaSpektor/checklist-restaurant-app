@@ -256,7 +256,6 @@ const buildRunner = (zone: string, title: string): RunnerData => {
 };
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
-  { id: 'active', label: 'Активные', icon: 'ClipboardList' },
   { id: 'done', label: 'Завершённые', icon: 'CheckCheck' },
   { id: 'templates', label: 'Шаблоны', icon: 'LayoutTemplate' },
   { id: 'stats', label: 'Статистика', icon: 'BarChart3' },
@@ -277,7 +276,7 @@ const templates = [
 const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков'];
 
 const Index = () => {
-  const [tab, setTab] = useState<Tab>('active');
+  const [tab, setTab] = useState<Tab>('done');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>(() => {

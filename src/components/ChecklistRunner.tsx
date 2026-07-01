@@ -133,9 +133,12 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const checked = data.items.filter((i) => states[i.id].status !== 'pending').length;
   const okCount = data.items.filter((i) => states[i.id].status === 'ok').length;
   const issues = data.items.filter((i) => states[i.id].status === 'issue').length;
+  const naCount = data.items.filter((i) => states[i.id].status === 'na').length;
   const isStandards = data.zone === 'Стандарты';
-  const score = data.items.length
-    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(2)))
+  // «Неактуально» считается как «Зачёт» — исключаем из знаменателя для зоны Стандарты
+  const scoreBase = isStandards ? data.items.length - naCount : data.items.length;
+  const score = scoreBase > 0
+    ? Math.max(1, parseFloat((5 - (issues / scoreBase) * 4).toFixed(2)))
     : 5;
   const isKitchen = data.zone === 'Кухня';
   const isPastry = data.zone === 'Кондитер';
