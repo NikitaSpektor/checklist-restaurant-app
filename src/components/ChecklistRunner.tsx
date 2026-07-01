@@ -108,6 +108,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
+  const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
 
   const ALL_RECIPIENTS = [
     'spektor@iconfood.ru', 'sysoev@iconfood.ru', 'gavrilova@iconfood.ru',
@@ -302,9 +303,33 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     const now = new Date();
     const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
+    const uploadPhoto = async (base64: string): Promise<string> => {
+      const res = await fetch(UPLOAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo: base64 }),
+      });
+      const json = await res.json();
+      return json.url || base64;
+    };
+
     const sendReport = async () => {
       setSendStatus('sending');
       try {
+        // Загружаем все base64-фото в S3, заменяем на CDN-ссылки
+        const issuesWithPhotos = await Promise.all(
+          issueItems.map(async (item) => {
+            const st = states[item.id];
+            let photo: string | null = null;
+            if (st.photo && st.photo.startsWith('data:')) {
+              photo = await uploadPhoto(st.photo);
+            } else if (st.photo) {
+              photo = st.photo;
+            }
+            return { text: item.text, comment: st.comment || '', photo };
+          })
+        );
+
         const report = {
           title: data.title,
           zone: data.zone,
@@ -318,7 +343,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           total: data.items.length,
           fine: hasFines ? totalFine : null,
           items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
-          issues: issueItems.map((item) => ({ text: item.text, comment: states[item.id].comment || '', photo: states[item.id].photo || null })),
+          issues: issuesWithPhotos,
         };
         const res = await fetch(SEND_URL, {
           method: 'POST',
