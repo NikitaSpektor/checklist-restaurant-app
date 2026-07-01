@@ -269,7 +269,7 @@ const templates = [
   { id: 1, zone: 'Бар', title: 'Чек-лист бара', items: 31, icon: 'Wine', color: '280 30% 50%' },
   { id: 2, zone: 'Кухня', title: 'Чек-лист кухни', items: 46, icon: 'CookingPot', color: '16 45% 48%' },
   { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', items: 34, icon: 'Cake', color: '340 40% 55%' },
-  { id: 4, zone: 'Стандарты', title: 'Чек-лист стандартов', items: 79, icon: 'BadgeCheck', color: '200 40% 45%' },
+  { id: 4, zone: 'Стандарты', title: 'Чек-лист Зал', items: 79, icon: 'BadgeCheck', color: '200 40% 45%' },
   { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', items: 25, icon: 'GlassWater', color: '170 40% 42%' },
 ];
 
