@@ -95,12 +95,14 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const [month, setMonth] = useState(currentMonth);
   const [year, setYear] = useState(currentYear);
   const [restaurant, setRestaurant] = useState('');
+  const [waiterName, setWaiterName] = useState('');
   const [started, setStarted] = useState(false);
   const [states, setStates] = useState<Record<number, ItemState>>(
     Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '' }]))
   );
+  const isGuestService = data.zone === 'Обслуживание гостей';
   const finalAssignee = `${lastName} ${firstName}`.trim();
-  const canStart = lastName.trim() && firstName.trim() && restaurant;
+  const canStart = lastName.trim() && firstName.trim() && restaurant && (!isGuestService || waiterName.trim());
   const [finished, setFinished] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
@@ -206,6 +208,20 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 </div>
               </div>
 
+              {/* Официант (только для чек-листа обслуживания гостей) */}
+              {isGuestService && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Официант</p>
+                  <label className="text-sm font-medium">Фамилия и Имя официанта</label>
+                  <Input
+                    placeholder="Иванов Иван"
+                    value={waiterName}
+                    onChange={(e) => setWaiterName(e.target.value)}
+                    className="rounded-2xl h-12 mt-2"
+                  />
+                </div>
+              )}
+
               {/* Период */}
               <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Период</p>
@@ -280,6 +296,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             {canStart && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground px-1 animate-fade-in">
                 <span className="flex items-center gap-1.5"><Icon name="User" size={13} />{finalAssignee}</span>
+                {isGuestService && waiterName && <span className="flex items-center gap-1.5"><Icon name="UserCheck" size={13} />{waiterName}</span>}
                 <span className="flex items-center gap-1.5"><Icon name="CalendarDays" size={13} />{month} {year}</span>
                 <span className="flex items-center gap-1.5"><Icon name="MapPin" size={13} />{restaurant}</span>
               </div>
@@ -341,6 +358,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           month: `${month} ${year}`,
           time: now.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
           by: finalAssignee,
+          waiter: waiterName || null,
           score,
           ok_count: okCount,
           issues_count: issues,
@@ -401,10 +419,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             </div>
 
             {/* Мета-строка */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className={`grid gap-2 sm:gap-3 ${isGuestService && waiterName ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
               {[
                 { icon: 'User', label: 'Проверяющий', value: finalAssignee },
-                { icon: 'CheckCheck', label: 'Зачёт', value: `${okCount} из ${data.items.length}` },
+                ...(isGuestService && waiterName ? [{ icon: 'UserCheck', label: 'Официант', value: waiterName }] : []),
+                { icon: 'CheckCheck', label: 'Зачёт', value: `${okCount} из ${data.items.length - naCount}` },
                 { icon: 'X', label: 'Незачёт', value: String(issues) },
               ].map((m) => (
                 <div key={m.label} className="bg-secondary/50 rounded-2xl p-3 sm:p-4">

@@ -97,6 +97,7 @@ def build_html(report: dict) -> str:
       <div style="flex:1;padding:16px 20px;border-right:1px solid #f0ece6;">
         <div style="font-size:11px;color:#9c836e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Проверяющий</div>
         <div style="font-size:15px;font-weight:600;color:#3d2f22;">{report.get("by","")}</div>
+        {f'<div style="font-size:12px;color:#9c836e;margin-top:4px;">Официант: {report["waiter"]}</div>' if report.get("waiter") else ""}
       </div>
       <div style="flex:1;padding:16px 20px;border-right:1px solid #f0ece6;">
         <div style="font-size:11px;color:#9c836e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Зачётов</div>
