@@ -387,12 +387,20 @@ const Index = () => {
   const handleComplete = async (c: CompletedCheck) => {
     setCompleted((prev) => [c, ...prev]);
     try {
+      // Убираем base64-фото перед сохранением в БД — они слишком тяжёлые
+      const toSave = {
+        ...c,
+        itemsDetail: c.itemsDetail?.map((item) => ({
+          ...item,
+          photo: item.photo?.startsWith('data:') ? null : (item.photo ?? null),
+        })),
+      };
       await fetch(CHECKS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(c),
+        body: JSON.stringify(toSave),
       });
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to save check:', e); }
   };
 
   const handleDelete = async (id: number) => {
