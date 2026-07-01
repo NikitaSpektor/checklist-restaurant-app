@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import ChecklistRunner, { RunnerData, CompletedCheck } from '@/components/ChecklistRunner';
+import CompletedCheckViewer from '@/components/CompletedCheckViewer';
 
 type Tab = 'active' | 'done' | 'templates' | 'stats';
 
@@ -277,6 +278,7 @@ const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты',
 const Index = () => {
   const [tab, setTab] = useState<Tab>('active');
   const [runner, setRunner] = useState<RunnerData | null>(null);
+  const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>(() => {
     try {
       const saved = localStorage.getItem('completed_checks');
@@ -342,6 +344,12 @@ const Index = () => {
           data={runner}
           onClose={() => setRunner(null)}
           onComplete={handleComplete}
+        />
+      )}
+      {viewingCheck && (
+        <CompletedCheckViewer
+          check={viewingCheck}
+          onClose={() => setViewingCheck(null)}
         />
       )}
       {/* Header */}
@@ -471,7 +479,13 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-2 shrink-0">
-                  <Icon name="CircleCheck" size={20} className="text-primary" />
+                  <button
+                    onClick={() => setViewingCheck(c as CompletedCheck)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    title="Просмотр"
+                  >
+                    <Icon name="Eye" size={14} />
+                  </button>
                   {'id' in c && completed.some((x) => x.id === c.id) && (
                     <button
                       onClick={() => handleDelete(c.id)}

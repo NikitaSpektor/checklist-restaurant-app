@@ -18,6 +18,16 @@ export interface RunnerData {
   items: ChecklistItem[];
 }
 
+export interface CompletedCheckItem {
+  id: number;
+  text: string;
+  section?: string;
+  fine?: number;
+  status: 'pending' | 'ok' | 'issue' | 'na';
+  comment: string;
+  photo?: string;
+}
+
 export interface CompletedCheck {
   id: number;
   title: string;
@@ -29,6 +39,9 @@ export interface CompletedCheck {
   time: string;
   issues: number;
   fine?: number;
+  okCount?: number;
+  totalCount?: number;
+  itemsDetail?: CompletedCheckItem[];
 }
 
 type Status = 'pending' | 'ok' | 'issue' | 'na';
@@ -104,6 +117,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     'lysenko@iconfood.ru', 'sidanov@iconfood.ru', 'maslova@iconfood.ru',
     'bozhkova@iconfood.ru', 'akramova@iconfood.ru', 'chernyshev@iconfood.ru',
     'dvoeglazov@blackmarketcafe.ru', 'semyonova@iconfood.ru', 'd.solovyova@iconfood.ru',
+    'petrakova@iconfood.ru',
   ];
 
   const toggleRecipient = useCallback((email: string) => {
@@ -120,9 +134,8 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const okCount = data.items.filter((i) => states[i.id].status === 'ok').length;
   const issues = data.items.filter((i) => states[i.id].status === 'issue').length;
   const isStandards = data.zone === 'Стандарты';
-  const scorePrecision = isStandards ? 2 : 1;
   const score = data.items.length
-    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(scorePrecision)))
+    ? Math.max(1, parseFloat((5 - (issues / data.items.length) * 4).toFixed(2)))
     : 5;
   const isKitchen = data.zone === 'Кухня';
   const isPastry = data.zone === 'Кондитер';
@@ -722,6 +735,17 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
                 issues,
                 fine: hasFines ? totalFine : undefined,
+                okCount,
+                totalCount: data.items.length,
+                itemsDetail: data.items.map((i) => ({
+                  id: i.id,
+                  text: i.text,
+                  section: i.section,
+                  fine: i.fine,
+                  status: states[i.id].status,
+                  comment: states[i.id].comment,
+                  photo: states[i.id].photo,
+                })),
               });
             }}
             className="rounded-full px-6 sm:px-8 h-11 gap-2 w-full sm:w-auto"
