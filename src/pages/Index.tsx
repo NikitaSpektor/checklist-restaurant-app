@@ -303,15 +303,27 @@ const Index = () => {
   useEffect(() => { fetchChecks(); }, [fetchChecks]);
 
   const [statsRestaurant, setStatsRestaurant] = useState<string>('all');
+  const [statsZone, setStatsZone] = useState<string>('all');
+  const [statsPeriod, setStatsPeriod] = useState<string>('all');
 
   const restaurants = useMemo(() => {
     const set = new Set(completed.map((c) => c.restaurant).filter(Boolean));
     return Array.from(set).sort();
   }, [completed]);
 
-  const filteredCompleted = useMemo(() =>
-    statsRestaurant === 'all' ? completed : completed.filter((c) => c.restaurant === statsRestaurant),
-  [completed, statsRestaurant]);
+  const periods = useMemo(() => {
+    const set = new Set(completed.map((c) => c.month).filter(Boolean));
+    return Array.from(set).sort().reverse();
+  }, [completed]);
+
+  const filteredCompleted = useMemo(() => {
+    return completed.filter((c) => {
+      if (statsRestaurant !== 'all' && c.restaurant !== statsRestaurant) return false;
+      if (statsZone !== 'all' && c.zone !== statsZone) return false;
+      if (statsPeriod !== 'all' && c.month !== statsPeriod) return false;
+      return true;
+    });
+  }, [completed, statsRestaurant, statsZone, statsPeriod]);
 
   const stats = useMemo(() => {
     const total = filteredCompleted.length;
@@ -559,30 +571,43 @@ const Index = () => {
         {/* Stats */}
         {tab === 'stats' && (
           <div className="animate-scale-in space-y-6">
-            {/* Фильтр по ресторанам */}
-            {restaurants.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setStatsRestaurant('all')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    statsRestaurant === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
-                  }`}
-                >
-                  Все рестораны
-                </button>
-                {restaurants.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setStatsRestaurant(r)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      statsRestaurant === r ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
+            {/* Фильтры */}
+            <div className="space-y-3">
+              {/* По ресторану */}
+              {restaurants.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Ресторан</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setStatsRestaurant('all')} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsRestaurant === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>Все</button>
+                    {restaurants.map((r) => (
+                      <button key={r} onClick={() => setStatsRestaurant(r)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsRestaurant === r ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>{r}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* По подразделению */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Подразделение</p>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={() => setStatsZone('all')} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsZone === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>Все</button>
+                  {ZONES.map((z) => (
+                    <button key={z} onClick={() => setStatsZone(z)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsZone === z ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>{z}</button>
+                  ))}
+                </div>
               </div>
-            )}
+              {/* По периоду */}
+              {periods.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Период</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setStatsPeriod('all')} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsPeriod === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>Все</button>
+                    {periods.map((p) => (
+                      <button key={p} onClick={() => setStatsPeriod(p)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${statsPeriod === p ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}>{p}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((s) => (
                 <div key={s.label} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-5">
