@@ -29,6 +29,7 @@ RECIPIENTS = [
     "dvoeglazov@blackmarketcafe.ru",
     "semyonova@iconfood.ru",
     "d.solovyova@iconfood.ru",
+    "petrakova@iconfood.ru",
 ]
 
 
