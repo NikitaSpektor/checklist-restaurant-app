@@ -255,9 +255,9 @@ const buildRunner = (zone: string, title: string): RunnerData => {
   return { title, zone, items: texts.map((text, i) => ({ id: i + 1, text })) };
 };
 
-const NAV: { id: Tab; label: string; icon: string }[] = [
+const NAV: { id: Tab; label: string; icon: string; accent?: boolean }[] = [
+  { id: 'templates', label: 'Чек-листы', icon: 'LayoutTemplate', accent: true },
   { id: 'done', label: 'Завершённые', icon: 'CheckCheck' },
-  { id: 'templates', label: 'Шаблоны', icon: 'LayoutTemplate' },
   { id: 'stats', label: 'Статистика', icon: 'BarChart3' },
 ];
 
@@ -276,7 +276,7 @@ const templates = [
 const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков'];
 
 const Index = () => {
-  const [tab, setTab] = useState<Tab>('done');
+  const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>(() => {
@@ -390,8 +390,12 @@ const Index = () => {
               onClick={() => setTab(n.id)}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                 tab === n.id
-                  ? 'bg-card shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? n.accent
+                    ? 'bg-orange-500 shadow-sm text-white'
+                    : 'bg-card shadow-sm text-foreground'
+                  : n.accent
+                    ? 'text-orange-500 hover:text-orange-600'
+                    : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon name={n.icon} size={16} />
