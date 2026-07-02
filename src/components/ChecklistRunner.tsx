@@ -10,6 +10,7 @@ export interface ChecklistItem {
   text: string;
   section?: string;
   fine?: number;
+  hasNa?: boolean;
 }
 
 export interface RunnerData {
@@ -698,7 +699,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   >
                     <Icon name="X" size={16} /> Незачёт
                   </button>
-                  {isStandards && (
+                  {(isStandards || item.hasNa) && (
                     <button
                       onClick={() => set(item.id, { status: st.status === 'na' ? 'pending' : 'na', comment: '', photo: undefined })}
                       className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[110px] ${

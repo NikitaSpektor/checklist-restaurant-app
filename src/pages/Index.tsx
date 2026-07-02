@@ -11,7 +11,7 @@ type Tab = 'active' | 'done' | 'templates' | 'stats';
 const ITEMS_BY_ZONE: Record<string, string[]> = {
 };
 
-type SectionedItem = { text: string; section?: string; fine?: number };
+type SectionedItem = { text: string; section?: string; fine?: number; hasNa?: boolean };
 
 const ITEMS_WITH_SECTIONS: Record<string, SectionedItem[]> = {
   'Бар': [
@@ -263,6 +263,10 @@ const ITEMS_WITH_SECTIONS_GUEST: SectionedItem[] = [
   { section: 'Обслуживание за столом', text: 'В процессе уборки спрашивал разрешения убрать неиспользуемую посуду' },
   { section: 'Обслуживание за столом', text: 'Официант предложил дополнительную продажу или повтор напитка' },
   { section: 'Обслуживание за столом', text: 'Официант попросил обратную связь (конкретно по блюду или напитку, либо общее впечатление)' },
+  { section: 'Программа лояльности', text: 'Официант уточнил о наличии программы лояльности у гостя' },
+  { section: 'Программа лояльности', text: 'Если программы нет — официант предложил установить приложение', hasNa: true },
+  { section: 'Программа лояльности', text: 'Если у гостя нет приложения — официант вкратце рассказал о всех преимуществах приложения', hasNa: true },
+  { section: 'Программа лояльности', text: 'Официант уточнил: списать или начислить бонусы' },
   { section: 'Расчёт', text: 'Предчек в течение 3 минут, расчёт в течение 4 минут' },
   { section: 'Расчёт', text: 'Официант уточнил способ оплаты' },
   { section: 'Расчёт', text: 'Официант принёс фискальный чек и сдачу' },
@@ -278,7 +282,7 @@ const buildRunner = (zone: string, title: string): RunnerData => {
   if (zone === 'Обслуживание гостей') {
     return {
       title, zone,
-      items: ITEMS_WITH_SECTIONS_GUEST.map((item, i) => ({ id: i + 1, text: item.text, section: item.section })),
+      items: ITEMS_WITH_SECTIONS_GUEST.map((item, i) => ({ id: i + 1, text: item.text, section: item.section, hasNa: item.hasNa })),
     };
   }
   if (ITEMS_WITH_SECTIONS[zone]) {
@@ -307,7 +311,7 @@ const templates = [
   { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', items: 34, icon: 'Cake', color: '340 40% 55%' },
   { id: 4, zone: 'Стандарты', title: 'Чек-лист Зал', items: 79, icon: 'BadgeCheck', color: '200 40% 45%' },
   { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', items: 25, icon: 'GlassWater', color: '170 40% 42%' },
-  { id: 6, zone: 'Обслуживание гостей', title: 'Чек-лист обслуживания гостей', items: 27, icon: 'Users', color: '35 60% 48%' },
+  { id: 6, zone: 'Обслуживание гостей', title: 'Чек-лист обслуживания гостей', items: 31, icon: 'Users', color: '35 60% 48%' },
 ];
 
 const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков', 'Обслуживание гостей'];
