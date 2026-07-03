@@ -43,6 +43,7 @@ export interface CompletedCheck {
   okCount?: number;
   totalCount?: number;
   itemsDetail?: CompletedCheckItem[];
+  finesDistribution?: string;
 }
 
 type Status = 'pending' | 'ok' | 'issue' | 'na';
@@ -108,6 +109,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const [emailOpen, setEmailOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
+  const [finesDistribution, setFinesDistribution] = useState('');
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
@@ -121,7 +123,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
     'lysenko@iconfood.ru', 'sidanov@iconfood.ru', 'maslova@iconfood.ru',
     'bozhkova@iconfood.ru', 'akramova@iconfood.ru', 'chernyshev@iconfood.ru',
     'dvoeglazov@blackmarketcafe.ru', 'semyonova@iconfood.ru', 'd.solovyova@iconfood.ru',
-    'petrakova@iconfood.ru',
+    'petrakova@iconfood.ru', 'shuvalova@iconfood.ru', 'tarasenko@iconfood.ru',
   ];
 
   const toggleRecipient = useCallback((email: string) => {
@@ -367,6 +369,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
           fine: hasFines ? totalFine : null,
           items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
           issues: issuesWithPhotos,
+          fines_distribution: isBar && finesDistribution ? finesDistribution : null,
         };
         const res = await fetch(SEND_URL, {
           method: 'POST',
@@ -543,6 +546,26 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
                   {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
                 </p>
+              </div>
+            )}
+
+            {/* Распределение штрафов между сотрудниками (только Бар) */}
+            {isBar && (
+              <div className="print:hidden">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Распределение штрафов между сотрудниками</p>
+                <Textarea
+                  placeholder="Например: Иванов — 600 ₽ (пункт 2), Петров — 300 ₽ (пункт 10)…"
+                  value={finesDistribution}
+                  onChange={(e) => setFinesDistribution(e.target.value)}
+                  className="rounded-2xl resize-none bg-background border-border/70"
+                  rows={4}
+                />
+              </div>
+            )}
+            {isBar && finesDistribution && (
+              <div className="hidden print:block">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Распределение штрафов между сотрудниками</p>
+                <p className="text-sm whitespace-pre-wrap">{finesDistribution}</p>
               </div>
             )}
 

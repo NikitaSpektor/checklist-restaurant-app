@@ -30,6 +30,8 @@ RECIPIENTS = [
     "semyonova@iconfood.ru",
     "d.solovyova@iconfood.ru",
     "petrakova@iconfood.ru",
+    "shuvalova@iconfood.ru",
+    "tarasenko@iconfood.ru",
 ]
 
 
@@ -73,6 +75,15 @@ def build_html(report: dict) -> str:
           <span style="font-size:22px;font-weight:700;color:#dc2626;">−{report['fine']:,} ₽</span>
         </div>"""
 
+    fines_distribution_block = ""
+    if report.get("fines_distribution"):
+        fd = report["fines_distribution"].replace("\n", "<br>")
+        fines_distribution_block = f"""
+        <div style="margin-top:24px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9c836e;margin-bottom:12px;">Распределение штрафов между сотрудниками</div>
+          <div style="background:#f9f5f1;border:1px solid #f0ece6;border-radius:10px;padding:14px 16px;font-size:13px;color:#3d2f22;line-height:1.6;">{fd}</div>
+        </div>"""
+
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -99,6 +110,7 @@ def build_html(report: dict) -> str:
         <div style="font-size:15px;font-weight:600;color:#3d2f22;">{report.get("by","")}</div>
         {f'<div style="font-size:12px;color:#9c836e;margin-top:4px;">Официант: {report["waiter"]}</div>' if report.get("waiter") else ""}
       </div>
+
       <div style="flex:1;padding:16px 20px;border-right:1px solid #f0ece6;">
         <div style="font-size:11px;color:#9c836e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Зачётов</div>
         <div style="font-size:15px;font-weight:600;color:#2d8a4e;">{report.get("ok_count",0)} из {report.get("total",0)}</div>
@@ -134,6 +146,7 @@ def build_html(report: dict) -> str:
       </div>
 
       {fine_block}
+      {fines_distribution_block}
 
     </div>
 
