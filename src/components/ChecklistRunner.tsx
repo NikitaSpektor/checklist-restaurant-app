@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { downloadElementAsPdf } from '@/lib/pdf';
 
 export interface ChecklistItem {
   id: number;
@@ -110,6 +111,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
   const [finesDistribution, setFinesDistribution] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
@@ -383,6 +385,16 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
       }
     };
 
+    const handleDownloadPdf = async () => {
+      setPdfLoading(true);
+      try {
+        const fileName = `${data.title} · ${restaurant} · ${month} ${year}.pdf`;
+        await downloadElementAsPdf('print-report', fileName);
+      } finally {
+        setPdfLoading(false);
+      }
+    };
+
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
         {/* Шапка */}
@@ -392,9 +404,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               <Icon name="ArrowLeft" size={20} />
             </Button>
             <p className="font-semibold text-sm">Отчёт сформирован</p>
-            <Button className="rounded-full gap-2 h-9 px-4" onClick={() => window.print()}>
-              <Icon name="Download" size={15} />
-              Сохранить PDF
+            <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
+              {pdfLoading
+                ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
+                : <><Icon name="Download" size={15} /> Скачать PDF</>
+              }
             </Button>
           </div>
         </header>
@@ -642,8 +656,11 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               <Icon name="Mail" size={16} />
               На email
             </Button>
-            <Button className="flex-1 rounded-full h-11 gap-2" onClick={() => window.print()}>
-              <Icon name="FileDown" size={16} />
+            <Button className="flex-1 rounded-full h-11 gap-2" onClick={handleDownloadPdf} disabled={pdfLoading}>
+              {pdfLoading
+                ? <Icon name="Loader" size={16} className="animate-spin" />
+                : <Icon name="FileDown" size={16} />
+              }
               PDF
             </Button>
           </div>

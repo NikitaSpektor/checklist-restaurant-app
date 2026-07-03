@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { CompletedCheck } from '@/components/ChecklistRunner';
+import { downloadElementAsPdf } from '@/lib/pdf';
 
 interface Props {
   check: CompletedCheck;
@@ -8,6 +10,7 @@ interface Props {
 }
 
 const CompletedCheckViewer = ({ check, onClose }: Props) => {
+  const [pdfLoading, setPdfLoading] = useState(false);
   const items = check.itemsDetail ?? [];
   const issueItems = items.filter((i) => i.status === 'issue');
   const okCount = check.okCount ?? items.filter((i) => i.status === 'ok').length;
@@ -22,6 +25,16 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
     else grouped.push({ section: sec, items: [item] });
   });
 
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const fileName = `${check.title} · ${check.restaurant} · ${check.month}.pdf`;
+      await downloadElementAsPdf('print-report', fileName);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
       <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
@@ -30,9 +43,11 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
             <Icon name="ArrowLeft" size={20} />
           </Button>
           <p className="font-semibold text-sm">Просмотр проверки</p>
-          <Button className="rounded-full gap-2 h-9 px-4" onClick={() => window.print()}>
-            <Icon name="Download" size={15} />
-            PDF
+          <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
+            {pdfLoading
+              ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
+              : <><Icon name="Download" size={15} /> PDF</>
+            }
           </Button>
         </div>
       </header>
