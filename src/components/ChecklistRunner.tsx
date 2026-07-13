@@ -25,7 +25,7 @@ export interface CompletedCheckItem {
   text: string;
   section?: string;
   fine?: number;
-  status: 'pending' | 'ok' | 'issue' | 'na';
+  status: 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';
   comment: string;
   photo?: string;
 }
@@ -47,9 +47,9 @@ export interface CompletedCheck {
   finesDistribution?: string;
 }
 
-type Status = 'pending' | 'ok' | 'issue' | 'na';
+type Status = 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';
 
-// Штраф за незачёт по секции (только для зоны Стандарты)
+// Депремирование за незачёт по секции (только для зоны Стандарты)
 const FINE_BY_SECTION: Record<string, number> = {
   'Касса · 1000 баллов за каждый пункт': 1000,
   'Укомплектованность штата · 3000 баллов': 3000,
@@ -140,7 +140,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
 
   const checked = data.items.filter((i) => states[i.id].status !== 'pending').length;
   const okCount = data.items.filter((i) => states[i.id].status === 'ok').length;
-  const issues = data.items.filter((i) => states[i.id].status === 'issue').length;
+  const issues = data.items.filter((i) => states[i.id].status === 'issue' || states[i.id].status === 'issue_no_fine').length;
   const naCount = data.items.filter((i) => states[i.id].status === 'na').length;
   const isStandards = data.zone === 'Стандарты';
   // «Неактуально» считается как «Зачёт» — исключаем из знаменателя для зоны Стандарты
@@ -321,7 +321,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   }
 
   if (finished) {
-    const issueItems = data.items.filter((i) => states[i.id].status === 'issue');
+    const issueItems = data.items.filter((i) => states[i.id].status === 'issue' || states[i.id].status === 'issue_no_fine');
     const now = new Date();
     const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -352,7 +352,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             } else if (st.photo) {
               photo = st.photo;
             }
-            return { text: item.text, comment: st.comment || '', photo };
+            return { text: item.text, comment: st.comment || '', photo, no_fine: st.status === 'issue_no_fine' };
           })
         );
 
@@ -469,7 +469,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                       )}
                     <div
                       className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== data.items.length - 1 ? 'border-b border-border/50' : ''} ${
-                        st.status === 'issue' ? 'bg-destructive/5' : ''
+                        st.status === 'issue' || st.status === 'issue_no_fine' ? 'bg-destructive/5' : ''
                       }`}
                     >
                       <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
@@ -479,11 +479,13 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                           ? 'bg-primary/10 text-primary'
                           : st.status === 'issue'
                           ? 'bg-destructive/15 text-destructive'
+                          : st.status === 'issue_no_fine'
+                          ? 'bg-amber-500/15 text-amber-600'
                           : st.status === 'na'
                           ? 'bg-border/60 text-muted-foreground'
                           : 'bg-secondary text-muted-foreground'
                       }`}>
-                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : st.status === 'na' ? 'Неакт.' : '—'}
+                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : st.status === 'issue_no_fine' ? 'Незачёт б/в' : st.status === 'na' ? 'Неакт.' : '—'}
                       </span>
                     </div>
                     </div>
@@ -526,7 +528,10 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                                   <span className="w-5 h-5 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
                                     {num}
                                   </span>
-                                  <p className="text-sm font-medium leading-snug">{item.text}</p>
+                                  <p className="text-sm font-medium leading-snug flex-1">{item.text}</p>
+                                  {st.status === 'issue_no_fine' && (
+                                    <span className="shrink-0 text-[11px] font-medium text-amber-600 bg-amber-500/15 rounded-full px-2 py-0.5">без вычета</span>
+                                  )}
                                 </div>
                                 {st.comment && (
                                   <p className="text-sm text-muted-foreground pl-7 italic">«{st.comment}»</p>
@@ -547,15 +552,15 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               );
             })()}
 
-            {/* Итоговый штраф */}
+            {/* Итоговое депремирование */}
             {hasFines && (
               <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${totalFine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговое депремирование</p>
                   {isStandards && <p className="text-xs text-muted-foreground">Касса: −1 000 ₽/пункт · Укомплектованность: −3 000 ₽ · Остальные: −500 ₽/пункт</p>}
-                  {isKitchen && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
-                  {isPastry && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 500 или 1 000 ₽</p>}
-                  {isBar && <p className="text-xs text-muted-foreground">Штраф зависит от пункта: 300 / 600 / 1 000 ₽</p>}
+                  {isKitchen && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
+                  {isPastry && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 или 1 000 ₽</p>}
+                  {isBar && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 300 / 600 / 1 000 ₽</p>}
                 </div>
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
                   {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
@@ -563,10 +568,10 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               </div>
             )}
 
-            {/* Распределение штрафов между сотрудниками (только Бар) */}
+            {/* Распределение депремирования между сотрудниками (только Бар) */}
             {isBar && (
               <div className="print:hidden">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Распределение штрафов между сотрудниками</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Распределение депремирования между сотрудниками</p>
                 <Textarea
                   placeholder="Например: Иванов — 600 ₽ (пункт 2), Петров — 300 ₽ (пункт 10)…"
                   value={finesDistribution}
@@ -578,7 +583,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             )}
             {isBar && finesDistribution && (
               <div className="hidden print:block">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Распределение штрафов между сотрудниками</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Распределение депремирования между сотрудниками</p>
                 <p className="text-sm whitespace-pre-wrap">{finesDistribution}</p>
               </div>
             )}
@@ -707,7 +712,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 )}
               <div
                 className={`bg-card border rounded-3xl p-4 sm:p-5 transition-all ${
-                  st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
+                  st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'issue_no_fine' ? 'border-amber-400/50' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -725,7 +730,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-4 pl-6 sm:pl-8">
                   <button
                     onClick={() => set(item.id, { status: st.status === 'ok' ? 'pending' : 'ok' })}
-                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[100px] ${
                       st.status === 'ok' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                     }`}
                   >
@@ -733,11 +738,19 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   </button>
                   <button
                     onClick={() => set(item.id, { status: st.status === 'issue' ? 'pending' : 'issue' })}
-                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[100px] ${
                       st.status === 'issue' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                     }`}
                   >
                     <Icon name="X" size={16} /> Незачёт
+                  </button>
+                  <button
+                    onClick={() => set(item.id, { status: st.status === 'issue_no_fine' ? 'pending' : 'issue_no_fine' })}
+                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[150px] ${
+                      st.status === 'issue_no_fine' ? 'bg-amber-500 text-white' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                    }`}
+                  >
+                    <Icon name="CircleMinus" size={16} /> Незачёт, без вычета
                   </button>
                   {(isStandards || item.hasNa) && (
                     <button
@@ -751,39 +764,43 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   )}
                 </div>
 
-                {st.status === 'issue' && (
+                {(st.status === 'ok' || st.status === 'issue' || st.status === 'issue_no_fine') && (
                   <div className="mt-3 pl-6 sm:pl-8 space-y-3 animate-fade-in">
                     <Textarea
-                      placeholder="Комментарий к незачёту…"
+                      placeholder={st.status === 'ok' ? 'Комментарий к зачёту…' : 'Комментарий к незачёту…'}
                       value={st.comment}
                       onChange={(e) => set(item.id, { comment: e.target.value })}
                       className="rounded-2xl resize-none bg-background border-border/70"
                       rows={2}
                     />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      ref={(el) => (fileRefs.current[item.id] = el)}
-                      onChange={(e) => onFile(item.id, e)}
-                    />
-                    {st.photo ? (
-                      <div className="relative inline-block">
-                        <img src={st.photo} alt="нарушение" className="h-32 w-32 sm:h-28 sm:w-28 object-cover rounded-2xl" />
-                        <button
-                          onClick={() => set(item.id, { photo: undefined })}
-                          className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
-                        >
-                          <Icon name="X" size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => fileRefs.current[item.id]?.click()}
-                        className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
-                      >
-                        <Icon name="Camera" size={16} /> Прикрепить фото
-                      </button>
+                    {(st.status === 'issue' || st.status === 'issue_no_fine') && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={(el) => (fileRefs.current[item.id] = el)}
+                          onChange={(e) => onFile(item.id, e)}
+                        />
+                        {st.photo ? (
+                          <div className="relative inline-block">
+                            <img src={st.photo} alt="нарушение" className="h-32 w-32 sm:h-28 sm:w-28 object-cover rounded-2xl" />
+                            <button
+                              onClick={() => set(item.id, { photo: undefined })}
+                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                            >
+                              <Icon name="X" size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => fileRefs.current[item.id]?.click()}
+                            className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+                          >
+                            <Icon name="Camera" size={16} /> Прикрепить фото
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -837,6 +854,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   comment: states[i.id].comment,
                   photo: states[i.id].photo,
                 })),
+                finesDistribution: isBar && finesDistribution ? finesDistribution : undefined,
               });
             }}
             className="rounded-full px-6 sm:px-8 h-11 gap-2 w-full sm:w-auto"

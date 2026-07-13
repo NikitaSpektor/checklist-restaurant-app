@@ -12,7 +12,7 @@ interface Props {
 const CompletedCheckViewer = ({ check, onClose }: Props) => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const items = check.itemsDetail ?? [];
-  const issueItems = items.filter((i) => i.status === 'issue');
+  const issueItems = items.filter((i) => i.status === 'issue' || i.status === 'issue_no_fine');
   const okCount = check.okCount ?? items.filter((i) => i.status === 'ok').length;
   const totalCount = check.totalCount ?? items.length;
   const score = check.score;
@@ -103,16 +103,17 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
                           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{item.section}</span>
                         </div>
                       )}
-                      <div className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== items.length - 1 ? 'border-b border-border/50' : ''} ${item.status === 'issue' ? 'bg-destructive/5' : ''}`}>
+                      <div className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== items.length - 1 ? 'border-b border-border/50' : ''} ${item.status === 'issue' || item.status === 'issue_no_fine' ? 'bg-destructive/5' : ''}`}>
                         <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
                         <span className="flex-1 leading-snug">{item.text}</span>
                         <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
                           item.status === 'ok' ? 'bg-primary/10 text-primary'
                           : item.status === 'issue' ? 'bg-destructive/15 text-destructive'
+                          : item.status === 'issue_no_fine' ? 'bg-amber-500/15 text-amber-600'
                           : item.status === 'na' ? 'bg-border/60 text-muted-foreground'
                           : 'bg-secondary text-muted-foreground'
                         }`}>
-                          {item.status === 'ok' ? 'Зачёт' : item.status === 'issue' ? 'Незачёт' : item.status === 'na' ? 'Неакт.' : '—'}
+                          {item.status === 'ok' ? 'Зачёт' : item.status === 'issue' ? 'Незачёт' : item.status === 'issue_no_fine' ? 'Незачёт б/в' : item.status === 'na' ? 'Неакт.' : '—'}
                         </span>
                       </div>
                     </div>
@@ -145,7 +146,10 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
                                 <span className="w-5 h-5 rounded-full bg-destructive/15 text-destructive flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
                                   {num}
                                 </span>
-                                <p className="text-sm font-medium leading-snug">{item.text}</p>
+                                <p className="text-sm font-medium leading-snug flex-1">{item.text}</p>
+                                {item.status === 'issue_no_fine' && (
+                                  <span className="shrink-0 text-[11px] font-medium text-amber-600 bg-amber-500/15 rounded-full px-2 py-0.5">без вычета</span>
+                                )}
                               </div>
                               {item.comment && (
                                 <p className="text-sm text-muted-foreground pl-7 italic">«{item.comment}»</p>
@@ -169,11 +173,18 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
           {check.fine != null && (
             <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${check.fine > 0 ? 'bg-destructive/8 border border-destructive/25' : 'bg-secondary/50 border border-border/60'}`}>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговый штраф</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">Итоговое депремирование</p>
               </div>
               <p className={`text-2xl font-bold tabular-nums ${check.fine > 0 ? 'text-destructive' : 'text-primary'}`}>
                 {check.fine > 0 ? `−${check.fine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
               </p>
+            </div>
+          )}
+
+          {check.finesDistribution && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Распределение депремирования между сотрудниками</p>
+              <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{check.finesDistribution}</p>
             </div>
           )}
 

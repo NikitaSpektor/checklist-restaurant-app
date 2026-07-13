@@ -44,9 +44,10 @@ def build_html(report: dict) -> str:
         comment = item.get("comment", "")
         photo = item.get("photo", None)
         photo_html = f'<br><img src="{photo}" style="margin-top:8px;max-width:320px;max-height:240px;border-radius:8px;display:block;" />' if photo else ""
+        no_fine_badge = ' <span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600;">без вычета</span>' if item.get("no_fine") else ""
         issues_rows += f"""
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:14px;color:#3d2f22;">{item.get("text","")}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:14px;color:#3d2f22;">{item.get("text","")}{no_fine_badge}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #f0ece6;font-size:13px;color:#6b5745;font-style:italic;">{comment if comment else "—"}{photo_html}</td>
         </tr>"""
 
@@ -57,6 +58,8 @@ def build_html(report: dict) -> str:
             badge = '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">Зачёт</span>'
         elif status == "issue":
             badge = '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">Незачёт</span>'
+        elif status == "issue_no_fine":
+            badge = '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">Незачёт б/в</span>'
         elif status == "na":
             badge = '<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">Неакт.</span>'
         else:
@@ -71,7 +74,7 @@ def build_html(report: dict) -> str:
     if report.get("fine") and report["fine"] > 0:
         fine_block = f"""
         <div style="margin-top:24px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;color:#6b5745;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Итоговый штраф</span>
+          <span style="font-size:13px;color:#6b5745;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Итоговое депремирование</span>
           <span style="font-size:22px;font-weight:700;color:#dc2626;">−{report['fine']:,} ₽</span>
         </div>"""
 
@@ -80,7 +83,7 @@ def build_html(report: dict) -> str:
         fd = report["fines_distribution"].replace("\n", "<br>")
         fines_distribution_block = f"""
         <div style="margin-top:24px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9c836e;margin-bottom:12px;">Распределение штрафов между сотрудниками</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9c836e;margin-bottom:12px;">Распределение депремирования между сотрудниками</div>
           <div style="background:#f9f5f1;border:1px solid #f0ece6;border-radius:10px;padding:14px 16px;font-size:13px;color:#3d2f22;line-height:1.6;">{fd}</div>
         </div>"""
 
