@@ -561,6 +561,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
                   {isKitchen && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
                   {isPastry && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 или 1 000 ₽</p>}
                   {isBar && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 300 / 600 / 1 000 ₽</p>}
+                  <p className="text-xs text-muted-foreground mt-0.5">«Незачёт, без вычета» влияет на балл, но не входит в сумму депремирования</p>
                 </div>
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
                   {totalFine > 0 ? `−${totalFine.toLocaleString('ru-RU')} ₽` : '0 ₽'}
