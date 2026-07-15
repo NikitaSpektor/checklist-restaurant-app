@@ -298,6 +298,8 @@ const buildRunner = (zone: string, title: string): RunnerData => {
   return { title, zone, items: texts.map((text, i) => ({ id: i + 1, text })) };
 };
 
+const buildRunnerFromCompleted = (check: CompletedCheck): RunnerData => buildRunner(check.zone, check.title);
+
 const NAV: { id: Tab; label: string; icon: string; accent?: boolean }[] = [
   { id: 'templates', label: 'Чек-листы', icon: 'LayoutTemplate', accent: true },
   { id: 'done', label: 'Завершённые', icon: 'CheckCheck' },
@@ -324,6 +326,7 @@ const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e
 const Index = () => {
   const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
+  const [editingCheck, setEditingCheck] = useState<CompletedCheck | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
   const [loading, setLoading] = useState(true);
@@ -392,7 +395,11 @@ const Index = () => {
   }), [filteredCompleted]);
 
   const handleComplete = async (c: CompletedCheck) => {
-    setCompleted((prev) => [c, ...prev]);
+    setCompleted((prev) => {
+      const exists = prev.some((x) => x.id === c.id);
+      return exists ? prev.map((x) => (x.id === c.id ? c : x)) : [c, ...prev];
+    });
+    setEditingCheck(null);
     try {
       // Убираем base64-фото перед сохранением в БД — они слишком тяжёлые
       const toSave = {
@@ -410,6 +417,11 @@ const Index = () => {
     } catch (e) { console.error('Failed to save check:', e); }
   };
 
+  const handleEdit = (c: CompletedCheck) => {
+    setEditingCheck(c);
+    setRunner(buildRunnerFromCompleted(c));
+  };
+
   const handleDelete = async (id: number) => {
     setCompleted((prev) => prev.filter((c) => c.id !== id));
     try {
@@ -422,14 +434,16 @@ const Index = () => {
       {runner && (
         <ChecklistRunner
           data={runner}
-          onClose={() => setRunner(null)}
+          onClose={() => { setRunner(null); setEditingCheck(null); }}
           onComplete={handleComplete}
+          editingCheck={editingCheck ?? undefined}
         />
       )}
       {viewingCheck && (
         <CompletedCheckViewer
           check={viewingCheck}
           onClose={() => setViewingCheck(null)}
+          onEdit={(c) => { setViewingCheck(null); handleEdit(c); }}
         />
       )}
       {/* Header */}
@@ -577,13 +591,22 @@ const Index = () => {
                     <Icon name="Eye" size={14} />
                   </button>
                   {'id' in c && completed.some((x) => x.id === c.id) && (
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      title="Удалить"
-                    >
-                      <Icon name="Trash2" size={14} />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleEdit(c as CompletedCheck)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        title="Редактировать"
+                      >
+                        <Icon name="Pencil" size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Удалить"
+                      >
+                        <Icon name="Trash2" size={14} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

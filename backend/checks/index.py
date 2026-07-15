@@ -8,7 +8,7 @@ def get_conn():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def handler(event: dict, context) -> dict:
-    """CRUD для завершённых проверок: GET — список, POST — сохранить, DELETE — удалить."""
+    """CRUD для завершённых проверок: GET — список, POST — сохранить/обновить, DELETE — удалить."""
     cors = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
@@ -24,7 +24,7 @@ def handler(event: dict, context) -> dict:
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
-            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail '
+            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution '
             f'FROM {SCHEMA}.completed_checks ORDER BY created_at DESC'
         )
         rows = cur.fetchall()
@@ -46,6 +46,8 @@ def handler(event: dict, context) -> dict:
                 'okCount': r[10],
                 'totalCount': r[11],
                 'itemsDetail': r[12],
+                'waiter': r[13],
+                'finesDistribution': r[14],
             })
         return {'statusCode': 200, 'headers': cors, 'body': json.dumps(checks, ensure_ascii=False)}
 
@@ -57,12 +59,19 @@ def handler(event: dict, context) -> dict:
         cur = conn.cursor()
         cur.execute(
             f'INSERT INTO {SCHEMA}.completed_checks '
-            f'(id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail) '
-            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
+            f'(id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution) '
+            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+            f'ON CONFLICT (id) DO UPDATE SET '
+            f'title = EXCLUDED.title, zone = EXCLUDED.zone, score = EXCLUDED.score, by_name = EXCLUDED.by_name, '
+            f'restaurant = EXCLUDED.restaurant, month = EXCLUDED.month, issues = EXCLUDED.issues, '
+            f'fine = EXCLUDED.fine, ok_count = EXCLUDED.ok_count, total_count = EXCLUDED.total_count, '
+            f'items_detail = EXCLUDED.items_detail, waiter_name = EXCLUDED.waiter_name, '
+            f'fines_distribution = EXCLUDED.fines_distribution, updated_at = NOW()',
             (
                 c['id'], c['title'], c['zone'], c['score'], c['by'],
                 c['restaurant'], c['month'], c['time'], c['issues'],
                 c.get('fine'), c.get('okCount'), c.get('totalCount'), items_detail,
+                c.get('waiter'), c.get('finesDistribution'),
             )
         )
         conn.commit()

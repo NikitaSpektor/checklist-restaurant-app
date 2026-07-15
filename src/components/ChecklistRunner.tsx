@@ -36,6 +36,7 @@ export interface CompletedCheck {
   zone: string;
   score: number;
   by: string;
+  waiter?: string;
   restaurant: string;
   month: string;
   time: string;
@@ -92,17 +93,44 @@ const currentMonth = MONTHS[new Date().getMonth()];
 const currentYear = new Date().getFullYear();
 const YEARS = [currentYear - 1, currentYear, currentYear + 1];
 
-const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onClose: () => void; onComplete?: (c: CompletedCheck) => void }) => {
-  const [lastName, setLastName] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [month, setMonth] = useState(currentMonth);
-  const [year, setYear] = useState(currentYear);
-  const [restaurant, setRestaurant] = useState('');
-  const [waiterName, setWaiterName] = useState('');
+const parseMonthYear = (monthStr?: string): { month: string; year: number } => {
+  if (!monthStr) return { month: currentMonth, year: currentYear };
+  const parts = monthStr.trim().split(' ');
+  const yearNum = Number(parts[1]);
+  if (parts.length === 2 && MONTHS.includes(parts[0]) && !Number.isNaN(yearNum)) {
+    return { month: parts[0], year: yearNum };
+  }
+  return { month: currentMonth, year: currentYear };
+};
+
+const parseAssignee = (by?: string): { lastName: string; firstName: string } => {
+  if (!by) return { lastName: '', firstName: '' };
+  const parts = by.trim().split(' ');
+  return { lastName: parts[0] ?? '', firstName: parts.slice(1).join(' ') };
+};
+
+const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: RunnerData; onClose: () => void; onComplete?: (c: CompletedCheck) => void; editingCheck?: CompletedCheck }) => {
+  const initialAssignee = parseAssignee(editingCheck?.by);
+  const initialMonthYear = parseMonthYear(editingCheck?.month);
+  const [lastName, setLastName] = useState(initialAssignee.lastName);
+  const [firstName, setFirstName] = useState(initialAssignee.firstName);
+  const [month, setMonth] = useState(initialMonthYear.month);
+  const [year, setYear] = useState(initialMonthYear.year);
+  const [restaurant, setRestaurant] = useState(editingCheck?.restaurant ?? '');
+  const [waiterName, setWaiterName] = useState(editingCheck?.waiter ?? '');
   const [started, setStarted] = useState(false);
-  const [states, setStates] = useState<Record<number, ItemState>>(
-    Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '' }]))
-  );
+  const [states, setStates] = useState<Record<number, ItemState>>(() => {
+    if (editingCheck?.itemsDetail) {
+      const bySection = new Map(editingCheck.itemsDetail.map((i) => [i.id, i]));
+      return Object.fromEntries(
+        data.items.map((i) => {
+          const saved = bySection.get(i.id);
+          return [i.id, { status: saved?.status ?? 'pending', comment: saved?.comment ?? '', photo: saved?.photo }];
+        })
+      );
+    }
+    return Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '' }]));
+  });
   const isGuestService = data.zone === 'Обслуживание гостей';
   const finalAssignee = `${lastName} ${firstName}`.trim();
   const canStart = lastName.trim() && firstName.trim() && restaurant && (!isGuestService || waiterName.trim());
@@ -110,7 +138,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
   const [emailOpen, setEmailOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
-  const [finesDistribution, setFinesDistribution] = useState('');
+  const [finesDistribution, setFinesDistribution] = useState(editingCheck?.finesDistribution ?? '');
   const [pdfLoading, setPdfLoading] = useState(false);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -214,15 +242,15 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             </Button>
             <div>
               <p className="font-semibold text-sm tracking-tight">{data.title}</p>
-              <p className="text-[11px] text-muted-foreground">Данные проверки</p>
+              <p className="text-[11px] text-muted-foreground">{editingCheck ? 'Редактирование проверки' : 'Данные проверки'}</p>
             </div>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-5 sm:px-8 py-8">
-            <h2 className="font-display text-3xl sm:text-4xl font-medium tracking-tight mb-2">Перед началом<br/>проверки</h2>
-            <p className="text-muted-foreground text-sm mb-8">Заполните данные — они войдут в итоговый отчёт</p>
+            <h2 className="font-display text-3xl sm:text-4xl font-medium tracking-tight mb-2">{editingCheck ? <>Редактирование<br/>проверки</> : <>Перед началом<br/>проверки</>}</h2>
+            <p className="text-muted-foreground text-sm mb-8">{editingCheck ? 'Проверьте данные и внесите изменения в пункты' : 'Заполните данные — они войдут в итоговый отчёт'}</p>
 
             <div className="space-y-5">
               {/* Проверяющий */}
@@ -348,7 +376,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
               onClick={() => setStarted(true)}
               className="w-full rounded-full h-12 gap-2 text-base"
             >
-              Начать проверку
+              {editingCheck ? 'Перейти к пунктам' : 'Начать проверку'}
               <Icon name="ArrowRight" size={18} />
             </Button>
           </div>
@@ -871,14 +899,15 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             onClick={() => {
               setFinished(true);
               onComplete?.({
-                id: Date.now(),
+                id: editingCheck?.id ?? Date.now(),
                 title: data.title,
                 zone: data.zone,
                 score,
                 by: finalAssignee,
+                waiter: isGuestService && waiterName ? waiterName : undefined,
                 restaurant,
                 month: `${month} ${year}`,
-                time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
+                time: editingCheck?.time ?? new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
                 issues,
                 fine: hasFines ? totalFine : undefined,
                 okCount,
@@ -897,7 +926,7 @@ const ChecklistRunner = ({ data, onClose, onComplete }: { data: RunnerData; onCl
             }}
             className="rounded-full px-6 sm:px-8 h-11 gap-2 w-full sm:w-auto"
           >
-            Завершить проверку
+            {editingCheck ? 'Сохранить изменения' : 'Завершить проверку'}
             <Icon name="ArrowRight" size={16} />
           </Button>
         </div>

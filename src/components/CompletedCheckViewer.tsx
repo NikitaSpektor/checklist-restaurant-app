@@ -7,9 +7,10 @@ import { downloadElementAsPdf } from '@/lib/pdf';
 interface Props {
   check: CompletedCheck;
   onClose: () => void;
+  onEdit?: (check: CompletedCheck) => void;
 }
 
-const CompletedCheckViewer = ({ check, onClose }: Props) => {
+const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const items = check.itemsDetail ?? [];
   const issueItems = items.filter((i) => i.status === 'issue' || i.status === 'issue_no_fine');
@@ -43,12 +44,20 @@ const CompletedCheckViewer = ({ check, onClose }: Props) => {
             <Icon name="ArrowLeft" size={20} />
           </Button>
           <p className="font-semibold text-sm">Просмотр проверки</p>
-          <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
-            {pdfLoading
-              ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
-              : <><Icon name="Download" size={15} /> PDF</>
-            }
-          </Button>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <Button variant="outline" className="rounded-full gap-2 h-9 px-4" onClick={() => onEdit(check)}>
+                <Icon name="Pencil" size={15} />
+                Изменить
+              </Button>
+            )}
+            <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
+              {pdfLoading
+                ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
+                : <><Icon name="Download" size={15} /> PDF</>
+              }
+            </Button>
+          </div>
         </div>
       </header>
 
