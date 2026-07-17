@@ -105,6 +105,7 @@ const ITEMS_WITH_SECTIONS: Record<string, SectionedItem[]> = {
     { text: 'Наличие пожарного одеяла', fine: 500 },
     { text: 'Кухонный инвентарь в чистом состоянии', fine: 500 },
     { text: 'Весы исправны, имеется действующий документ о проверке точности', fine: 500 },
+    { text: 'Наличие маркировки и наименования продукции', fine: 500 },
     { text: 'Во время проверки не производится уборка и не изменяется маркировка. При выявлении — проверка обнуляется', fine: 500 },
     { text: 'Учебные материалы (обои, ТК с описанием технологии приготовления) для поваров в наличии', fine: 1000 },
     { text: 'Несвоевременная замена ТК после официальной рассылки', fine: 3000 },
@@ -312,7 +313,7 @@ const doneChecks: { id: number; zone: string; title: string; score: number; by: 
 
 const templates = [
   { id: 1, zone: 'Бар', title: 'Чек-лист бара', items: 33, icon: 'Wine', color: '280 30% 50%' },
-  { id: 2, zone: 'Кухня', title: 'Чек-лист кухни', items: 46, icon: 'CookingPot', color: '16 45% 48%' },
+  { id: 2, zone: 'Кухня', title: 'Чек-лист кухни', items: 44, icon: 'CookingPot', color: '16 45% 48%' },
   { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', items: 34, icon: 'Cake', color: '340 40% 55%' },
   { id: 4, zone: 'Стандарты', title: 'Чек-лист Зал', items: 79, icon: 'BadgeCheck', color: '200 40% 45%' },
   { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', items: 25, icon: 'GlassWater', color: '170 40% 42%' },
