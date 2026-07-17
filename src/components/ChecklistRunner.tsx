@@ -453,7 +453,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
           fine: hasFines ? totalFine : null,
           items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
           issues: issuesWithPhotos,
-          fines_distribution: isBar && finesDistribution ? finesDistribution : null,
+          fines_distribution: (isBar || isKitchen || isPastry) && finesDistribution ? finesDistribution : null,
         };
         const res = await fetch(SEND_URL, {
           method: 'POST',
@@ -654,8 +654,8 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
               </div>
             )}
 
-            {/* Распределение депремирования между сотрудниками (только Бар) */}
-            {isBar && (
+            {/* Распределение депремирования между сотрудниками (Бар, Кухня, Кондитер) */}
+            {(isBar || isKitchen || isPastry) && (
               <div className="print:hidden">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Распределение депремирования между сотрудниками</p>
                 <Textarea
@@ -667,7 +667,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                 />
               </div>
             )}
-            {isBar && finesDistribution && (
+            {(isBar || isKitchen || isPastry) && finesDistribution && (
               <div className="hidden print:block">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Распределение депремирования между сотрудниками</p>
                 <p className="text-sm whitespace-pre-wrap">{finesDistribution}</p>
@@ -943,7 +943,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                   comment: states[i.id].comment,
                   photos: states[i.id].photos,
                 })),
-                finesDistribution: isBar && finesDistribution ? finesDistribution : undefined,
+                finesDistribution: (isBar || isKitchen || isPastry) && finesDistribution ? finesDistribution : undefined,
                 editHistory: editingCheck
                   ? [
                       ...(editingCheck.editHistory ?? []),
