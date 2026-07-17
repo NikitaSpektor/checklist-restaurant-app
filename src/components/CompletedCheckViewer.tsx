@@ -163,9 +163,11 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
                               {item.comment && (
                                 <p className="text-sm text-muted-foreground pl-7 italic">«{item.comment}»</p>
                               )}
-                              {item.photo && (
-                                <div className="pl-7">
-                                  <img src={item.photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                              {((item.photos && item.photos.length > 0) || item.photo) && (
+                                <div className="pl-7 flex flex-wrap gap-2">
+                                  {(item.photos ?? (item.photo ? [item.photo] : [])).map((photo, pIdx) => (
+                                    <img key={pIdx} src={photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                                  ))}
                                 </div>
                               )}
                             </div>

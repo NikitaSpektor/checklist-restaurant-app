@@ -27,7 +27,9 @@ export interface CompletedCheckItem {
   fine?: number;
   status: 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';
   comment: string;
+  /** @deprecated используйте photos */
   photo?: string;
+  photos?: string[];
 }
 
 export interface EditHistoryEntry {
@@ -71,7 +73,7 @@ const getFine = (section: string | undefined): number => {
 interface ItemState {
   status: Status;
   comment: string;
-  photo?: string;
+  photos: string[];
 }
 
 const RESTAURANTS = [
@@ -131,11 +133,12 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
       return Object.fromEntries(
         data.items.map((i) => {
           const saved = bySection.get(i.id);
-          return [i.id, { status: saved?.status ?? 'pending', comment: saved?.comment ?? '', photo: saved?.photo }];
+          const photos = saved?.photos ?? (saved?.photo ? [saved.photo] : []);
+          return [i.id, { status: saved?.status ?? 'pending', comment: saved?.comment ?? '', photos }];
         })
       );
     }
-    return Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '' }]));
+    return Object.fromEntries(data.items.map((i) => [i.id, { status: 'pending', comment: '', photos: [] }]));
   });
   const isGuestService = data.zone === 'Обслуживание гостей';
   const finalAssignee = `${lastName} ${firstName}`.trim();
@@ -225,16 +228,27 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
   };
 
   const onFile = async (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const compressed = await compressImage(file);
-      set(id, { photo: compressed });
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => set(id, { photo: reader.result as string });
-      reader.readAsDataURL(file);
-    }
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const compressed = await Promise.all(
+      files.map((file) =>
+        compressImage(file).catch(
+          () =>
+            new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            })
+        )
+      )
+    );
+    setStates((s) => ({ ...s, [id]: { ...s[id], photos: [...s[id].photos, ...compressed] } }));
+    e.target.value = '';
+  };
+
+  const removePhoto = (id: number, index: number) => {
+    setStates((s) => ({ ...s, [id]: { ...s[id], photos: s[id].photos.filter((_, i) => i !== index) } }));
   };
 
   // Экран заполнения данных перед проверкой
@@ -417,13 +431,10 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
         const issuesWithPhotos = await Promise.all(
           issueItems.map(async (item) => {
             const st = states[item.id];
-            let photo: string | null = null;
-            if (st.photo && st.photo.startsWith('data:')) {
-              photo = await uploadPhoto(st.photo);
-            } else if (st.photo) {
-              photo = st.photo;
-            }
-            return { text: item.text, comment: st.comment || '', photo, no_fine: st.status === 'issue_no_fine' };
+            const photos = await Promise.all(
+              st.photos.map((p) => (p.startsWith('data:') ? uploadPhoto(p) : Promise.resolve(p)))
+            );
+            return { text: item.text, comment: st.comment || '', photo: photos[0] ?? null, photos: photos.filter(Boolean), no_fine: st.status === 'issue_no_fine' };
           })
         );
 
@@ -607,9 +618,11 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                                 {st.comment && (
                                   <p className="text-sm text-muted-foreground pl-7 italic">«{st.comment}»</p>
                                 )}
-                                {st.photo && (
-                                  <div className="pl-7">
-                                    <img src={st.photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                                {st.photos.length > 0 && (
+                                  <div className="pl-7 flex flex-wrap gap-2">
+                                    {st.photos.map((photo, pIdx) => (
+                                      <img key={pIdx} src={photo} alt="фото нарушения" className="h-40 w-auto rounded-xl object-cover" />
+                                    ))}
                                   </div>
                                 )}
                               </div>
@@ -827,7 +840,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                   </button>
                   {(isStandards || item.hasNa) && (
                     <button
-                      onClick={() => set(item.id, { status: st.status === 'na' ? 'pending' : 'na', comment: '', photo: undefined })}
+                      onClick={() => set(item.id, { status: st.status === 'na' ? 'pending' : 'na', comment: '', photos: [] })}
                       className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all min-w-[110px] ${
                         st.status === 'na' ? 'bg-muted-foreground/20 text-muted-foreground ring-1 ring-border' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                       }`}
@@ -851,28 +864,30 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           className="hidden"
                           ref={(el) => (fileRefs.current[item.id] = el)}
                           onChange={(e) => onFile(item.id, e)}
                         />
-                        {st.photo ? (
-                          <div className="relative inline-block">
-                            <img src={st.photo} alt="нарушение" className="h-32 w-32 sm:h-28 sm:w-28 object-cover rounded-2xl" />
-                            <button
-                              onClick={() => set(item.id, { photo: undefined })}
-                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
-                            >
-                              <Icon name="X" size={14} />
-                            </button>
-                          </div>
-                        ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {st.photos.map((photo, idx) => (
+                            <div key={idx} className="relative inline-block">
+                              <img src={photo} alt="нарушение" className="h-32 w-32 sm:h-28 sm:w-28 object-cover rounded-2xl" />
+                              <button
+                                onClick={() => removePhoto(item.id, idx)}
+                                className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                              >
+                                <Icon name="X" size={14} />
+                              </button>
+                            </div>
+                          ))}
                           <button
                             onClick={() => fileRefs.current[item.id]?.click()}
                             className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
                           >
-                            <Icon name="Camera" size={16} /> Прикрепить фото
+                            <Icon name="Camera" size={16} /> {st.photos.length > 0 ? 'Добавить ещё' : 'Прикрепить фото'}
                           </button>
-                        )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -926,7 +941,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                   fine: i.fine,
                   status: states[i.id].status,
                   comment: states[i.id].comment,
-                  photo: states[i.id].photo,
+                  photos: states[i.id].photos,
                 })),
                 finesDistribution: isBar && finesDistribution ? finesDistribution : undefined,
                 editHistory: editingCheck

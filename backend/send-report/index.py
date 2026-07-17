@@ -42,8 +42,13 @@ def build_html(report: dict) -> str:
     issues_rows = ""
     for item in report.get("issues", []):
         comment = item.get("comment", "")
-        photo = item.get("photo", None)
-        photo_html = f'<br><img src="{photo}" style="margin-top:8px;max-width:320px;max-height:240px;border-radius:8px;display:block;" />' if photo else ""
+        photos = item.get("photos") or ([item["photo"]] if item.get("photo") else [])
+        photo_html = "".join(
+            f'<img src="{p}" style="margin-top:8px;margin-right:8px;max-width:320px;max-height:240px;border-radius:8px;display:inline-block;" />'
+            for p in photos
+        )
+        if photo_html:
+            photo_html = f"<br>{photo_html}"
         no_fine_badge = ' <span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600;">без вычета</span>' if item.get("no_fine") else ""
         issues_rows += f"""
         <tr>
