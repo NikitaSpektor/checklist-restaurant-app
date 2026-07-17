@@ -185,7 +185,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
   const isKitchen = data.zone === 'Кухня';
   const isPastry = data.zone === 'Кондитер';
   const isBar = data.zone === 'Бар';
-  const hasFines = isStandards || isKitchen || isPastry || isBar;
+  const hasFines = isStandards || isKitchen || isPastry || isBar || isGuestService;
   const totalFine = hasFines
     ? data.items
         .filter((i) => states[i.id].status === 'issue')
@@ -632,6 +632,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                   {isKitchen && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 / 1 000 / 3 000 / 5 000 ₽</p>}
                   {isPastry && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 500 или 1 000 ₽</p>}
                   {isBar && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: 300 / 600 / 1 000 ₽</p>}
+                  {isGuestService && <p className="text-xs text-muted-foreground">Депремирование зависит от пункта: от 100 до 500 ₽</p>}
                   <p className="text-xs text-muted-foreground mt-0.5">«Незачёт, без вычета» влияет на балл, но не входит в сумму депремирования</p>
                 </div>
                 <p className={`text-2xl font-bold tabular-nums ${totalFine > 0 ? 'text-destructive' : 'text-primary'}`}>
