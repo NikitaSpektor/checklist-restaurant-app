@@ -24,7 +24,7 @@ def handler(event: dict, context) -> dict:
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
-            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution '
+            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution, edit_history '
             f'FROM {SCHEMA}.completed_checks ORDER BY created_at DESC'
         )
         rows = cur.fetchall()
@@ -48,6 +48,7 @@ def handler(event: dict, context) -> dict:
                 'itemsDetail': r[12],
                 'waiter': r[13],
                 'finesDistribution': r[14],
+                'editHistory': r[15],
             })
         return {'statusCode': 200, 'headers': cors, 'body': json.dumps(checks, ensure_ascii=False)}
 
@@ -55,23 +56,24 @@ def handler(event: dict, context) -> dict:
         body = json.loads(event.get('body') or '{}')
         c = body
         items_detail = json.dumps(c.get('itemsDetail'), ensure_ascii=False) if c.get('itemsDetail') else None
+        edit_history = json.dumps(c.get('editHistory'), ensure_ascii=False) if c.get('editHistory') else None
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
             f'INSERT INTO {SCHEMA}.completed_checks '
-            f'(id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution) '
-            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+            f'(id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution, edit_history) '
+            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
             f'ON CONFLICT (id) DO UPDATE SET '
             f'title = EXCLUDED.title, zone = EXCLUDED.zone, score = EXCLUDED.score, by_name = EXCLUDED.by_name, '
             f'restaurant = EXCLUDED.restaurant, month = EXCLUDED.month, issues = EXCLUDED.issues, '
             f'fine = EXCLUDED.fine, ok_count = EXCLUDED.ok_count, total_count = EXCLUDED.total_count, '
             f'items_detail = EXCLUDED.items_detail, waiter_name = EXCLUDED.waiter_name, '
-            f'fines_distribution = EXCLUDED.fines_distribution, updated_at = NOW()',
+            f'fines_distribution = EXCLUDED.fines_distribution, edit_history = EXCLUDED.edit_history, updated_at = NOW()',
             (
                 c['id'], c['title'], c['zone'], c['score'], c['by'],
                 c['restaurant'], c['month'], c['time'], c['issues'],
                 c.get('fine'), c.get('okCount'), c.get('totalCount'), items_detail,
-                c.get('waiter'), c.get('finesDistribution'),
+                c.get('waiter'), c.get('finesDistribution'), edit_history,
             )
         )
         conn.commit()

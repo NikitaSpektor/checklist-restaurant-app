@@ -572,6 +572,11 @@ const Index = () => {
                           −{c.fine.toLocaleString('ru-RU')} ₽
                         </span>
                       )}
+                      {'editHistory' in c && c.editHistory && c.editHistory.length > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
+                          <Icon name="History" size={11} />изменено
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-semibold tracking-tight">{c.title}</h3>
                     <p className="text-sm text-muted-foreground mt-0.5">{c.by} · {c.time}</p>

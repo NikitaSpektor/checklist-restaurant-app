@@ -205,6 +205,20 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
             </div>
           )}
 
+          {check.editHistory && check.editHistory.length > 0 && (
+            <div className="print:hidden">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">История изменений</p>
+              <div className="space-y-1.5">
+                {check.editHistory.map((h, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/40 rounded-xl px-3 py-2">
+                    <Icon name="History" size={13} className="shrink-0" />
+                    <span>Изменено {h.by} · {h.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-muted-foreground">
             <span>Ресторанный холдинг ICONFOOD</span>
             <span>{check.time}</span>

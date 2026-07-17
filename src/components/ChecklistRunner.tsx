@@ -30,6 +30,11 @@ export interface CompletedCheckItem {
   photo?: string;
 }
 
+export interface EditHistoryEntry {
+  by: string;
+  time: string;
+}
+
 export interface CompletedCheck {
   id: number;
   title: string;
@@ -46,6 +51,7 @@ export interface CompletedCheck {
   totalCount?: number;
   itemsDetail?: CompletedCheckItem[];
   finesDistribution?: string;
+  editHistory?: EditHistoryEntry[];
 }
 
 type Status = 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';
@@ -922,6 +928,12 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                   photo: states[i.id].photo,
                 })),
                 finesDistribution: isBar && finesDistribution ? finesDistribution : undefined,
+                editHistory: editingCheck
+                  ? [
+                      ...(editingCheck.editHistory ?? []),
+                      { by: finalAssignee, time: new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) },
+                    ]
+                  : undefined,
               });
             }}
             className="rounded-full px-6 sm:px-8 h-11 gap-2 w-full sm:w-auto"
