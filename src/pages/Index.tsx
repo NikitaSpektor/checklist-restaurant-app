@@ -353,16 +353,25 @@ const Index = () => {
   const [statsZone, setStatsZone] = useState<string>('all');
   const [statsPeriod, setStatsPeriod] = useState<string>('all');
   const [doneZoneFilter, setDoneZoneFilter] = useState<string>('all');
+  const [doneMonthFilter, setDoneMonthFilter] = useState<string>('all');
 
   const doneZones = useMemo(() => {
     const set = new Set(completed.map((c) => c.zone).filter(Boolean));
     return Array.from(set).sort();
   }, [completed]);
 
+  const doneMonths = useMemo(() => {
+    const set = new Set(completed.map((c) => c.month).filter(Boolean));
+    return Array.from(set).sort().reverse();
+  }, [completed]);
+
   const filteredDone = useMemo(() => {
-    if (doneZoneFilter === 'all') return completed;
-    return completed.filter((c) => c.zone === doneZoneFilter);
-  }, [completed, doneZoneFilter]);
+    return completed.filter((c) => {
+      if (doneZoneFilter !== 'all' && c.zone !== doneZoneFilter) return false;
+      if (doneMonthFilter !== 'all' && c.month !== doneMonthFilter) return false;
+      return true;
+    });
+  }, [completed, doneZoneFilter, doneMonthFilter]);
 
   const restaurants = useMemo(() => {
     const set = new Set(completed.map((c) => c.restaurant).filter(Boolean));
@@ -569,6 +578,25 @@ const Index = () => {
                 ))}
               </div>
             )}
+            {!loading && completed.length > 0 && doneMonths.length > 1 && (
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setDoneMonthFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${doneMonthFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}
+                >
+                  Все месяцы
+                </button>
+                {doneMonths.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setDoneMonthFilter(m)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${doneMonthFilter === m ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            )}
             {loading && (
               <div className="text-center py-16 text-muted-foreground">
                 <Icon name="Loader" size={32} className="mx-auto mb-3 opacity-40 animate-spin" />
@@ -585,7 +613,7 @@ const Index = () => {
             {!loading && completed.length > 0 && filteredDone.length === 0 && (
               <div className="text-center py-16 text-muted-foreground">
                 <Icon name="FilterX" size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-medium">Нет проверок этого типа</p>
+                <p className="font-medium">Нет проверок по выбранным фильтрам</p>
               </div>
             )}
             {!loading && [...filteredDone, ...doneChecks].map((c) => (
