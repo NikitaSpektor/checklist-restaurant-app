@@ -352,6 +352,17 @@ const Index = () => {
   const [statsRestaurant, setStatsRestaurant] = useState<string>('all');
   const [statsZone, setStatsZone] = useState<string>('all');
   const [statsPeriod, setStatsPeriod] = useState<string>('all');
+  const [doneZoneFilter, setDoneZoneFilter] = useState<string>('all');
+
+  const doneZones = useMemo(() => {
+    const set = new Set(completed.map((c) => c.zone).filter(Boolean));
+    return Array.from(set).sort();
+  }, [completed]);
+
+  const filteredDone = useMemo(() => {
+    if (doneZoneFilter === 'all') return completed;
+    return completed.filter((c) => c.zone === doneZoneFilter);
+  }, [completed, doneZoneFilter]);
 
   const restaurants = useMemo(() => {
     const set = new Set(completed.map((c) => c.restaurant).filter(Boolean));
@@ -539,6 +550,25 @@ const Index = () => {
         {/* Done */}
         {tab === 'done' && (
           <div className="grid gap-4 animate-scale-in">
+            {!loading && completed.length > 0 && doneZones.length > 1 && (
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setDoneZoneFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${doneZoneFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}
+                >
+                  Все типы
+                </button>
+                {doneZones.map((z) => (
+                  <button
+                    key={z}
+                    onClick={() => setDoneZoneFilter(z)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${doneZoneFilter === z ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'}`}
+                  >
+                    {z}
+                  </button>
+                ))}
+              </div>
+            )}
             {loading && (
               <div className="text-center py-16 text-muted-foreground">
                 <Icon name="Loader" size={32} className="mx-auto mb-3 opacity-40 animate-spin" />
@@ -552,7 +582,13 @@ const Index = () => {
                 <p className="text-sm mt-1">Проведите первую проверку, чтобы она появилась здесь</p>
               </div>
             )}
-            {!loading && [...completed, ...doneChecks].map((c) => (
+            {!loading && completed.length > 0 && filteredDone.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground">
+                <Icon name="FilterX" size={40} className="mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Нет проверок этого типа</p>
+              </div>
+            )}
+            {!loading && [...filteredDone, ...doneChecks].map((c) => (
               <div key={c.id} className="bg-card border border-border/70 rounded-3xl p-4 sm:p-6 flex items-start justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-semibold tabular-nums shrink-0 ${
