@@ -710,6 +710,43 @@ const Index = () => {
                 ))}
               </div>
             </div>
+            <div className="bg-card border border-border/70 rounded-3xl p-6">
+              <h3 className="font-semibold tracking-tight mb-5">Итоговые баллы по проверкам</h3>
+              {filteredCompleted.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Нет проверок по выбранным фильтрам</p>
+              ) : (
+                <div className="space-y-2">
+                  {filteredCompleted.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setViewingCheck(c)}
+                      className="w-full flex items-center gap-3 sm:gap-4 rounded-2xl px-3 py-2.5 hover:bg-secondary/50 transition-colors text-left"
+                    >
+                      <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-semibold tabular-nums text-sm ${
+                        c.score >= 4 ? 'bg-accent text-accent-foreground' : c.score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
+                      }`}>
+                        {c.score}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium truncate">{c.title}</span>
+                          <Badge variant="secondary" className="rounded-full font-normal text-[10px] px-2 py-0">{c.zone}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {c.restaurant} · {c.month} · {c.by}
+                        </p>
+                      </div>
+                      {c.fine != null && c.fine > 0 && (
+                        <span className="shrink-0 text-xs font-semibold text-destructive bg-destructive/10 rounded-full px-2 py-0.5">
+                          −{c.fine.toLocaleString('ru-RU')} ₽
+                        </span>
+                      )}
+                      <Icon name="ChevronRight" size={16} className="text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
