@@ -112,18 +112,23 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
                           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{item.section}</span>
                         </div>
                       )}
-                      <div className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== items.length - 1 ? 'border-b border-border/50' : ''} ${item.status === 'issue' || item.status === 'issue_no_fine' ? 'bg-destructive/5' : ''}`}>
-                        <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
-                        <span className="flex-1 leading-snug">{item.text}</span>
-                        <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
-                          item.status === 'ok' ? 'bg-primary/10 text-primary'
-                          : item.status === 'issue' ? 'bg-destructive/15 text-destructive'
-                          : item.status === 'issue_no_fine' ? 'bg-amber-500/15 text-amber-600'
-                          : item.status === 'na' ? 'bg-border/60 text-muted-foreground'
-                          : 'bg-secondary text-muted-foreground'
-                        }`}>
-                          {item.status === 'ok' ? 'Зачёт' : item.status === 'issue' ? 'Незачёт' : item.status === 'issue_no_fine' ? 'Незачёт б/в' : item.status === 'na' ? 'Неакт.' : '—'}
-                        </span>
+                      <div className={`px-4 py-3 text-sm ${idx !== items.length - 1 ? 'border-b border-border/50' : ''} ${item.status === 'issue' || item.status === 'issue_no_fine' ? 'bg-destructive/5' : ''}`}>
+                        <div className="flex items-start gap-3">
+                          <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
+                          <span className="flex-1 leading-snug">{item.text}</span>
+                          <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                            item.status === 'ok' ? 'bg-primary/10 text-primary'
+                            : item.status === 'issue' ? 'bg-destructive/15 text-destructive'
+                            : item.status === 'issue_no_fine' ? 'bg-amber-500/15 text-amber-600'
+                            : item.status === 'na' ? 'bg-border/60 text-muted-foreground'
+                            : 'bg-secondary text-muted-foreground'
+                          }`}>
+                            {item.status === 'ok' ? 'Зачёт' : item.status === 'issue' ? 'Незачёт' : item.status === 'issue_no_fine' ? 'Незачёт б/в' : item.status === 'na' ? 'Неакт.' : '—'}
+                          </span>
+                        </div>
+                        {item.status === 'ok' && item.comment && (
+                          <p className="text-sm text-muted-foreground pl-8 mt-1 italic">«{item.comment}»</p>
+                        )}
                       </div>
                     </div>
                   );

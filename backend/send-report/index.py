@@ -69,9 +69,10 @@ def build_html(report: dict) -> str:
             badge = '<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">Неакт.</span>'
         else:
             badge = '<span style="background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:20px;font-size:12px;">—</span>'
+        comment_html = f'<br><span style="font-size:12px;color:#6b5745;font-style:italic;">«{item["comment"]}»</span>' if status == "ok" and item.get("comment") else ""
         items_rows += f"""
         <tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ece6;font-size:13px;color:#3d2f22;">{item.get("text","")}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0ece6;font-size:13px;color:#3d2f22;">{item.get("text","")}{comment_html}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0ece6;text-align:center;">{badge}</td>
         </tr>"""
 

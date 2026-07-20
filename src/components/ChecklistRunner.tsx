@@ -451,7 +451,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
           issues_count: issues,
           total: data.items.length,
           fine: hasFines ? totalFine : null,
-          items: data.items.map((item) => ({ text: item.text, status: states[item.id].status })),
+          items: data.items.map((item) => ({ text: item.text, status: states[item.id].status, comment: states[item.id].comment || '' })),
           issues: issuesWithPhotos,
           fines_distribution: (isBar || isKitchen || isPastry) && finesDistribution ? finesDistribution : null,
         };
@@ -550,25 +550,30 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
                         </div>
                       )}
                     <div
-                      className={`flex items-start gap-3 px-4 py-3 text-sm ${idx !== data.items.length - 1 ? 'border-b border-border/50' : ''} ${
+                      className={`px-4 py-3 text-sm ${idx !== data.items.length - 1 ? 'border-b border-border/50' : ''} ${
                         st.status === 'issue' || st.status === 'issue_no_fine' ? 'bg-destructive/5' : ''
                       }`}
                     >
-                      <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
-                      <span className="flex-1 leading-snug">{item.text}</span>
-                      <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
-                        st.status === 'ok'
-                          ? 'bg-primary/10 text-primary'
-                          : st.status === 'issue'
-                          ? 'bg-destructive/15 text-destructive'
-                          : st.status === 'issue_no_fine'
-                          ? 'bg-amber-500/15 text-amber-600'
-                          : st.status === 'na'
-                          ? 'bg-border/60 text-muted-foreground'
-                          : 'bg-secondary text-muted-foreground'
-                      }`}>
-                        {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : st.status === 'issue_no_fine' ? 'Незачёт б/в' : st.status === 'na' ? 'Неакт.' : '—'}
-                      </span>
+                      <div className="flex items-start gap-3">
+                        <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5">{idx + 1}</span>
+                        <span className="flex-1 leading-snug">{item.text}</span>
+                        <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                          st.status === 'ok'
+                            ? 'bg-primary/10 text-primary'
+                            : st.status === 'issue'
+                            ? 'bg-destructive/15 text-destructive'
+                            : st.status === 'issue_no_fine'
+                            ? 'bg-amber-500/15 text-amber-600'
+                            : st.status === 'na'
+                            ? 'bg-border/60 text-muted-foreground'
+                            : 'bg-secondary text-muted-foreground'
+                        }`}>
+                          {st.status === 'ok' ? 'Зачёт' : st.status === 'issue' ? 'Незачёт' : st.status === 'issue_no_fine' ? 'Незачёт б/в' : st.status === 'na' ? 'Неакт.' : '—'}
+                        </span>
+                      </div>
+                      {st.status === 'ok' && st.comment && (
+                        <p className="text-sm text-muted-foreground pl-8 mt-1 italic">«{st.comment}»</p>
+                      )}
                     </div>
                     </div>
                   );
