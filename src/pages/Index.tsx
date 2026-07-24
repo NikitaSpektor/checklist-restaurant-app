@@ -323,6 +323,21 @@ const templates = [
 const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков', 'Обслуживание гостей'];
 
 const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
+const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
+
+const uploadPhoto = async (base64: string): Promise<string | null> => {
+  try {
+    const res = await fetch(UPLOAD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo: base64 }),
+    });
+    const data = await res.json();
+    return data.url || null;
+  } catch {
+    return null;
+  }
+};
 
 const Index = () => {
   const [tab, setTab] = useState<Tab>('templates');
@@ -422,14 +437,21 @@ const Index = () => {
     });
     setEditingCheck(null);
     try {
-      // Убираем base64-фото перед сохранением в БД — они слишком тяжёлые
-      const toSave = {
-        ...c,
-        itemsDetail: c.itemsDetail?.map((item) => ({
-          ...item,
-          photo: item.photo?.startsWith('data:') ? null : (item.photo ?? null),
-        })),
-      };
+      // Загружаем base64-фото в S3 перед сохранением в БД — хранить base64 в БД нельзя (слишком тяжёлые)
+      const itemsDetail = c.itemsDetail
+        ? await Promise.all(
+            c.itemsDetail.map(async (item) => {
+              const photos = item.photos
+                ? await Promise.all(
+                    item.photos.map((p) => (p.startsWith('data:') ? uploadPhoto(p) : Promise.resolve(p)))
+                  )
+                : undefined;
+              const photo = item.photo?.startsWith('data:') ? await uploadPhoto(item.photo) : (item.photo ?? null);
+              return { ...item, photo, photos: photos?.filter((p): p is string => Boolean(p)) };
+            })
+          )
+        : undefined;
+      const toSave = { ...c, itemsDetail };
       await fetch(CHECKS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
