@@ -1,8 +1,10 @@
 import Icon from '@/components/ui/icon';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CompletedCheck } from '@/components/ChecklistRunner';
 import { ZONES } from '@/data/checklistData';
+import { exportChecksToExcel } from '@/lib/exportExcel';
 
 interface StatItem {
   label: string;
@@ -107,7 +109,20 @@ const StatsTab = ({
         </div>
       </div>
       <div className="bg-card border border-border/70 rounded-3xl p-6">
-        <h3 className="font-semibold tracking-tight mb-5">Итоговые баллы по проверкам</h3>
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <h3 className="font-semibold tracking-tight">Итоговые баллы по проверкам</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full gap-1.5 shrink-0"
+            disabled={filteredCompleted.length === 0}
+            onClick={() => exportChecksToExcel(filteredCompleted)}
+          >
+            <Icon name="FileSpreadsheet" size={14} />
+            <span className="hidden sm:inline">Экспорт в Excel</span>
+            <span className="sm:hidden">Excel</span>
+          </Button>
+        </div>
         {filteredCompleted.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">Нет проверок по выбранным фильтрам</p>
         ) : (
