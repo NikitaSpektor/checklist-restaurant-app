@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import PendingQueueBadge from '@/components/PendingQueueBadge';
 import { RunnerData, CompletedCheck, ItemState } from './types';
 
 interface ChecklistItemsScreenProps {
@@ -76,6 +77,7 @@ const ChecklistItemsScreen = ({
             <p className="font-semibold text-sm tracking-tight truncate">{data.title}</p>
             <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {month} {year} · {restaurant}</p>
           </div>
+          <PendingQueueBadge />
           <span className="text-sm font-medium tabular-nums text-muted-foreground w-12 text-right">
             {checked}/{data.items.length}
           </span>

@@ -7,10 +7,11 @@ import DoneTab from '@/components/index-tabs/DoneTab';
 import TemplatesTab from '@/components/index-tabs/TemplatesTab';
 import StatsTab from '@/components/index-tabs/StatsTab';
 import { Tab, NAV, ZONES, buildRunnerFromCompleted } from '@/data/checklistData';
-import { getQueue, addToQueue, removeFromQueue } from '@/lib/offlineQueue';
+import { addToQueue, sendCheckToServer } from '@/lib/offlineQueue';
+import PendingQueueBadge from '@/components/PendingQueueBadge';
 
-const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
 const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
+const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
 
 const uploadPhoto = async (base64: string): Promise<string | null> => {
   try {
@@ -33,8 +34,6 @@ const Index = () => {
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [retrying, setRetrying] = useState(false);
 
   const fetchChecks = useCallback(async () => {
     try {
@@ -119,37 +118,6 @@ const Index = () => {
     return { zone, score };
   }), [filteredCompleted]);
 
-  const sendCheckToServer = async (toSave: CompletedCheck) => {
-    const res = await fetch(CHECKS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toSave),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  };
-
-  const flushQueue = useCallback(async () => {
-    setRetrying(true);
-    const queue = getQueue();
-    for (const check of queue) {
-      try {
-        await sendCheckToServer(check);
-        removeFromQueue(check.id);
-      } catch {
-        // остаётся в очереди — попробуем при следующем восстановлении сети
-      }
-    }
-    setPendingCount(getQueue().length);
-    setRetrying(false);
-  }, []);
-
-  useEffect(() => {
-    setPendingCount(getQueue().length);
-    flushQueue();
-    window.addEventListener('online', flushQueue);
-    return () => window.removeEventListener('online', flushQueue);
-  }, [flushQueue]);
-
   const handleComplete = async (c: CompletedCheck) => {
     setCompleted((prev) => {
       const exists = prev.some((x) => x.id === c.id);
@@ -178,7 +146,6 @@ const Index = () => {
       // Нет связи с сервером — сохраняем проверку локально и отправим позже автоматически
       console.error('Failed to save check, queued for retry:', e);
       addToQueue(toSave);
-      setPendingCount(getQueue().length);
     }
   };
 
@@ -226,18 +193,7 @@ const Index = () => {
             </div>
           </div>
 
-          {pendingCount > 0 && (
-            <button
-              onClick={flushQueue}
-              disabled={retrying}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-8 rounded-full bg-amber-500/15 text-amber-600 text-xs font-medium hover:bg-amber-500/25 transition-colors disabled:opacity-60"
-              title="Есть проверки, не отправленные на сервер. Нажмите, чтобы повторить отправку"
-            >
-              <Icon name={retrying ? 'Loader' : 'CloudOff'} size={14} className={retrying ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">{retrying ? 'Отправляем…' : `Не отправлено: ${pendingCount}`}</span>
-              <span className="sm:hidden">{pendingCount}</span>
-            </button>
-          )}
+          <PendingQueueBadge />
         </div>
       </header>
 

@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { downloadElementAsPdf } from '@/lib/pdf';
+import PendingQueueBadge from '@/components/PendingQueueBadge';
 import { RunnerData, ItemState, ALL_RECIPIENTS, SEND_URL, UPLOAD_URL } from './types';
 
 interface ChecklistReportScreenProps {
@@ -145,12 +146,15 @@ const ChecklistReportScreen = ({
             <Icon name="ArrowLeft" size={20} />
           </Button>
           <p className="font-semibold text-sm">Отчёт сформирован</p>
-          <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
-            {pdfLoading
-              ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
-              : <><Icon name="Download" size={15} /> Скачать PDF</>
-            }
-          </Button>
+          <div className="flex items-center gap-2">
+            <PendingQueueBadge />
+            <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
+              {pdfLoading
+                ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
+                : <><Icon name="Download" size={15} /> Скачать PDF</>
+              }
+            </Button>
+          </div>
         </div>
       </header>
 
