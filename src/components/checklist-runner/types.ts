@@ -122,3 +122,45 @@ export const ALL_RECIPIENTS = [
 
 export const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
 export const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
+
+export interface DraftData {
+  lastName: string;
+  firstName: string;
+  month: string;
+  year: number;
+  restaurant: string;
+  waiterName: string;
+  started: boolean;
+  states: Record<number, ItemState>;
+  finesDistribution: string;
+  savedAt: number;
+}
+
+const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000; // черновик актуален 14 дней
+
+export const getDraftKey = (zone: string, title: string, editingId?: number) =>
+  `checklist_draft::${zone}::${title}::${editingId ?? 'new'}`;
+
+export const loadDraft = (key: string): DraftData | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as DraftData;
+    if (!draft.savedAt || Date.now() - draft.savedAt > DRAFT_TTL_MS) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+};
+
+export const saveDraft = (key: string, draft: Omit<DraftData, 'savedAt'>) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ ...draft, savedAt: Date.now() }));
+  } catch { /* хранилище переполнено — пропускаем сохранение черновика */ }
+};
+
+export const clearDraft = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch { /* ignore */ }
+};

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import ChecklistSetupScreen from './checklist-runner/ChecklistSetupScreen';
 import ChecklistItemsScreen from './checklist-runner/ChecklistItemsScreen';
 import ChecklistReportScreen from './checklist-runner/ChecklistReportScreen';
@@ -9,6 +9,10 @@ import {
   getFine,
   parseMonthYear,
   parseAssignee,
+  getDraftKey,
+  loadDraft,
+  saveDraft,
+  clearDraft,
 } from './checklist-runner/types';
 
 export type {
@@ -20,16 +24,23 @@ export type {
 } from './checklist-runner/types';
 
 const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: RunnerData; onClose: () => void; onComplete?: (c: CompletedCheck) => void; editingCheck?: CompletedCheck }) => {
+  const draftKey = getDraftKey(data.zone, data.title, editingCheck?.id);
+  const draft = loadDraft(draftKey);
   const initialAssignee = parseAssignee(editingCheck?.by);
   const initialMonthYear = parseMonthYear(editingCheck?.month);
-  const [lastName, setLastName] = useState(initialAssignee.lastName);
-  const [firstName, setFirstName] = useState(initialAssignee.firstName);
-  const [month, setMonth] = useState(initialMonthYear.month);
-  const [year, setYear] = useState(initialMonthYear.year);
-  const [restaurant, setRestaurant] = useState(editingCheck?.restaurant ?? '');
-  const [waiterName, setWaiterName] = useState(editingCheck?.waiter ?? '');
-  const [started, setStarted] = useState(false);
+  const [lastName, setLastName] = useState(draft?.lastName ?? initialAssignee.lastName);
+  const [firstName, setFirstName] = useState(draft?.firstName ?? initialAssignee.firstName);
+  const [month, setMonth] = useState(draft?.month ?? initialMonthYear.month);
+  const [year, setYear] = useState(draft?.year ?? initialMonthYear.year);
+  const [restaurant, setRestaurant] = useState(draft?.restaurant ?? editingCheck?.restaurant ?? '');
+  const [waiterName, setWaiterName] = useState(draft?.waiterName ?? editingCheck?.waiter ?? '');
+  const [started, setStarted] = useState(draft?.started ?? false);
   const [states, setStates] = useState<Record<number, ItemState>>(() => {
+    if (draft?.states) {
+      return Object.fromEntries(
+        data.items.map((i) => [i.id, draft.states[i.id] ?? { status: 'pending', comment: '', photos: [] }])
+      );
+    }
     if (editingCheck?.itemsDetail) {
       const bySection = new Map(editingCheck.itemsDetail.map((i) => [i.id, i]));
       return Object.fromEntries(
@@ -46,8 +57,14 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
   const finalAssignee = `${lastName} ${firstName}`.trim();
   const canStart = lastName.trim() && firstName.trim() && restaurant && (!isGuestService || waiterName.trim());
   const [finished, setFinished] = useState(false);
-  const [finesDistribution, setFinesDistribution] = useState(editingCheck?.finesDistribution ?? '');
+  const [finesDistribution, setFinesDistribution] = useState(draft?.finesDistribution ?? editingCheck?.finesDistribution ?? '');
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  // Автосохранение черновика проверки в браузере — защита от потери данных при обрыве связи
+  useEffect(() => {
+    if (finished) return;
+    saveDraft(draftKey, { lastName, firstName, month, year, restaurant, waiterName, started, states, finesDistribution });
+  }, [draftKey, lastName, firstName, month, year, restaurant, waiterName, started, states, finesDistribution, finished]);
 
   const set = (id: number, patch: Partial<ItemState>) =>
     setStates((s) => ({ ...s, [id]: { ...s[id], ...patch } }));
@@ -212,7 +229,7 @@ const ChecklistRunner = ({ data, onClose, onComplete, editingCheck }: { data: Ru
       isKitchen={isKitchen}
       isPastry={isPastry}
       finesDistribution={finesDistribution}
-      onComplete={onComplete}
+      onComplete={(c) => { clearDraft(draftKey); onComplete?.(c); }}
       setFinished={setFinished}
     />
   );

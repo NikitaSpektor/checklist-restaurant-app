@@ -7,6 +7,7 @@ import DoneTab from '@/components/index-tabs/DoneTab';
 import TemplatesTab from '@/components/index-tabs/TemplatesTab';
 import StatsTab from '@/components/index-tabs/StatsTab';
 import { Tab, NAV, ZONES, buildRunnerFromCompleted } from '@/data/checklistData';
+import { getQueue, addToQueue, removeFromQueue } from '@/lib/offlineQueue';
 
 const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
 const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
@@ -116,12 +117,40 @@ const Index = () => {
     return { zone, score };
   }), [filteredCompleted]);
 
+  const sendCheckToServer = async (toSave: CompletedCheck) => {
+    const res = await fetch(CHECKS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(toSave),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  };
+
+  const flushQueue = useCallback(async () => {
+    const queue = getQueue();
+    for (const check of queue) {
+      try {
+        await sendCheckToServer(check);
+        removeFromQueue(check.id);
+      } catch {
+        // остаётся в очереди — попробуем при следующем восстановлении сети
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    flushQueue();
+    window.addEventListener('online', flushQueue);
+    return () => window.removeEventListener('online', flushQueue);
+  }, [flushQueue]);
+
   const handleComplete = async (c: CompletedCheck) => {
     setCompleted((prev) => {
       const exists = prev.some((x) => x.id === c.id);
       return exists ? prev.map((x) => (x.id === c.id ? c : x)) : [c, ...prev];
     });
     setEditingCheck(null);
+    let toSave: CompletedCheck = c;
     try {
       // Загружаем base64-фото в S3 перед сохранением в БД — хранить base64 в БД нельзя (слишком тяжёлые)
       const itemsDetail = c.itemsDetail
@@ -137,13 +166,13 @@ const Index = () => {
             })
           )
         : undefined;
-      const toSave = { ...c, itemsDetail };
-      await fetch(CHECKS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toSave),
-      });
-    } catch (e) { console.error('Failed to save check:', e); }
+      toSave = { ...c, itemsDetail } as CompletedCheck;
+      await sendCheckToServer(toSave);
+    } catch (e) {
+      // Нет связи с сервером — сохраняем проверку локально и отправим позже автоматически
+      console.error('Failed to save check, queued for retry:', e);
+      addToQueue(toSave);
+    }
   };
 
   const handleEdit = (c: CompletedCheck) => {
