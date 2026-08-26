@@ -33,6 +33,8 @@ const Index = () => {
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [retrying, setRetrying] = useState(false);
 
   const fetchChecks = useCallback(async () => {
     try {
@@ -127,6 +129,7 @@ const Index = () => {
   };
 
   const flushQueue = useCallback(async () => {
+    setRetrying(true);
     const queue = getQueue();
     for (const check of queue) {
       try {
@@ -136,9 +139,12 @@ const Index = () => {
         // остаётся в очереди — попробуем при следующем восстановлении сети
       }
     }
+    setPendingCount(getQueue().length);
+    setRetrying(false);
   }, []);
 
   useEffect(() => {
+    setPendingCount(getQueue().length);
     flushQueue();
     window.addEventListener('online', flushQueue);
     return () => window.removeEventListener('online', flushQueue);
@@ -172,6 +178,7 @@ const Index = () => {
       // Нет связи с сервером — сохраняем проверку локально и отправим позже автоматически
       console.error('Failed to save check, queued for retry:', e);
       addToQueue(toSave);
+      setPendingCount(getQueue().length);
     }
   };
 
@@ -219,6 +226,18 @@ const Index = () => {
             </div>
           </div>
 
+          {pendingCount > 0 && (
+            <button
+              onClick={flushQueue}
+              disabled={retrying}
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-8 rounded-full bg-amber-500/15 text-amber-600 text-xs font-medium hover:bg-amber-500/25 transition-colors disabled:opacity-60"
+              title="Есть проверки, не отправленные на сервер. Нажмите, чтобы повторить отправку"
+            >
+              <Icon name={retrying ? 'Loader' : 'CloudOff'} size={14} className={retrying ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{retrying ? 'Отправляем…' : `Не отправлено: ${pendingCount}`}</span>
+              <span className="sm:hidden">{pendingCount}</span>
+            </button>
+          )}
         </div>
       </header>
 
