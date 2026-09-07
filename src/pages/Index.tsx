@@ -34,19 +34,30 @@ const Index = () => {
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  const fetchChecks = useCallback(async () => {
+  const fetchChecks = useCallback(async (attempt = 1) => {
     try {
       const res = await fetch(CHECKS_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const raw = await res.json();
       const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      setCompleted(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) throw new Error('Некорректный ответ сервера');
+      setCompleted(data);
+      setLoadError(false);
+      try { localStorage.setItem('completed_checks', JSON.stringify(data)); } catch { /* переполнено */ }
+      setLoading(false);
     } catch {
+      if (attempt < 3) {
+        setTimeout(() => fetchChecks(attempt + 1), 1000 * attempt);
+        return;
+      }
+      // Сервер недоступен — не затираем уже показанный список, используем последний известный кэш
       try {
         const saved = localStorage.getItem('completed_checks');
         if (saved) setCompleted(JSON.parse(saved));
       } catch { /* ignore */ }
-    } finally {
+      setLoadError(true);
       setLoading(false);
     }
   }, []);
@@ -238,6 +249,8 @@ const Index = () => {
         {tab === 'done' && (
           <DoneTab
             loading={loading}
+            loadError={loadError}
+            onRetry={() => { setLoading(true); fetchChecks(); }}
             completed={completed}
             filteredDone={filteredDone}
             doneZones={doneZones}

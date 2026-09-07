@@ -5,6 +5,8 @@ import { doneChecks } from '@/data/checklistData';
 
 interface DoneTabProps {
   loading: boolean;
+  loadError?: boolean;
+  onRetry?: () => void;
   completed: CompletedCheck[];
   filteredDone: CompletedCheck[];
   doneZones: string[];
@@ -20,6 +22,8 @@ interface DoneTabProps {
 
 const DoneTab = ({
   loading,
+  loadError,
+  onRetry,
   completed,
   filteredDone,
   doneZones,
@@ -34,6 +38,19 @@ const DoneTab = ({
 }: DoneTabProps) => {
   return (
     <div className="grid gap-4 animate-scale-in">
+      {!loading && loadError && (
+        <div className="flex items-center justify-between gap-3 bg-destructive/10 text-destructive rounded-2xl px-4 py-3 text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon name="WifiOff" size={16} className="shrink-0" />
+            <span className="truncate">Не удалось загрузить свежие данные с сервера. Показан последний сохранённый список.</span>
+          </div>
+          {onRetry && (
+            <button onClick={onRetry} className="shrink-0 font-medium underline underline-offset-2 hover:no-underline">
+              Повторить
+            </button>
+          )}
+        </div>
+      )}
       {!loading && completed.length > 0 && doneZones.length > 1 && (
         <div className="flex gap-2 flex-wrap">
           <button
