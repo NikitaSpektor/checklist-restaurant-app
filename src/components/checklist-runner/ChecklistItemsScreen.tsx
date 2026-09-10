@@ -1,4 +1,4 @@
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useRef, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -65,6 +65,17 @@ const ChecklistItemsScreen = ({
   onComplete,
   setFinished,
 }: ChecklistItemsScreenProps) => {
+  const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [pendingHighlightId, setPendingHighlightId] = useState<number | null>(null);
+
+  const goToFirstPending = () => {
+    const firstPending = data.items.find((item) => states[item.id].status === 'pending');
+    if (!firstPending) return;
+    itemRefs.current[firstPending.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setPendingHighlightId(firstPending.id);
+    setTimeout(() => setPendingHighlightId((cur) => (cur === firstPending.id ? null : cur)), 2000);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
       {/* Header */}
@@ -103,8 +114,11 @@ const ChecklistItemsScreen = ({
                   </div>
                 )}
               <div
-                className={`bg-card border rounded-3xl p-4 sm:p-5 transition-all ${
-                  st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'issue_no_fine' ? 'border-amber-400/50' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
+                ref={(el) => (itemRefs.current[item.id] = el)}
+                className={`bg-card border-2 rounded-3xl p-4 sm:p-5 transition-all ${
+                  pendingHighlightId === item.id
+                    ? 'border-destructive ring-4 ring-destructive/20'
+                    : st.status === 'ok' ? 'border-primary/30' : st.status === 'issue' ? 'border-destructive/40' : st.status === 'issue_no_fine' ? 'border-amber-400/50' : st.status === 'na' ? 'border-border/40 opacity-50' : 'border-border/70'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -223,8 +237,11 @@ const ChecklistItemsScreen = ({
             )}
           </div>
           <Button
-            disabled={checked < data.items.length}
             onClick={() => {
+              if (checked < data.items.length) {
+                goToFirstPending();
+                return;
+              }
               setFinished(true);
               onComplete?.({
                 id: editingCheck?.id ?? Date.now(),
