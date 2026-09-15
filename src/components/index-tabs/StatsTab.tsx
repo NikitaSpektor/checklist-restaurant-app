@@ -18,6 +18,20 @@ interface ZoneScore {
   score: number;
 }
 
+interface TastingRestaurantStat {
+  restaurant: string;
+  count: number;
+  avgScore: number;
+  totalIssues: number;
+  trend: number | null;
+}
+
+interface TastingSummary {
+  total: number;
+  avgScore: number | null;
+  totalIssues: number;
+}
+
 interface StatsTabProps {
   restaurants: string[];
   statsRestaurant: string;
@@ -29,6 +43,8 @@ interface StatsTabProps {
   setStatsPeriod: (v: string) => void;
   stats: StatItem[];
   zoneScores: ZoneScore[];
+  tastingByRestaurant: TastingRestaurantStat[];
+  tastingSummary: TastingSummary;
   filteredCompleted: CompletedCheck[];
   setViewingCheck: (c: CompletedCheck) => void;
 }
@@ -44,6 +60,8 @@ const StatsTab = ({
   setStatsPeriod,
   stats,
   zoneScores,
+  tastingByRestaurant,
+  tastingSummary,
   filteredCompleted,
   setViewingCheck,
 }: StatsTabProps) => {
@@ -108,6 +126,52 @@ const StatsTab = ({
           ))}
         </div>
       </div>
+      {tastingSummary.total > 0 && (
+        <div className="bg-card border border-border/70 rounded-3xl p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Icon name="UtensilsCrossed" size={18} className="text-primary" />
+            <h3 className="font-semibold tracking-tight">Дегустационные листы</h3>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-secondary/50 rounded-2xl p-4">
+              <p className="text-2xl font-semibold tracking-tight tabular-nums">{tastingSummary.total}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Дегустаций</p>
+            </div>
+            <div className="bg-secondary/50 rounded-2xl p-4">
+              <p className="text-2xl font-semibold tracking-tight tabular-nums">{tastingSummary.avgScore ?? '—'}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Средний балл</p>
+            </div>
+            <div className="bg-secondary/50 rounded-2xl p-4">
+              <p className="text-2xl font-semibold tracking-tight tabular-nums">{tastingSummary.totalIssues}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Замечаний</p>
+            </div>
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">По ресторанам</p>
+          <div className="space-y-2">
+            {tastingByRestaurant.map((r) => (
+              <div key={r.restaurant} className="flex items-center gap-3 sm:gap-4 rounded-2xl px-3 py-2.5 bg-secondary/30">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{r.restaurant}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{r.count} дегустаци{r.count === 1 ? 'я' : r.count < 5 ? 'и' : 'й'} · {r.totalIssues} замечани{r.totalIssues === 1 ? 'е' : r.totalIssues < 5 ? 'я' : 'й'}</p>
+                </div>
+                {r.trend != null && r.trend !== 0 && (
+                  <span className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                    r.trend > 0 ? 'text-primary bg-primary/10' : 'text-destructive bg-destructive/10'
+                  }`}>
+                    <Icon name={r.trend > 0 ? 'TrendingUp' : 'TrendingDown'} size={12} />
+                    {r.trend > 0 ? '+' : ''}{r.trend}
+                  </span>
+                )}
+                <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-semibold tabular-nums text-sm bg-card border border-border/60">
+                  {r.avgScore}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="bg-card border border-border/70 rounded-3xl p-6">
         <div className="flex items-center justify-between gap-3 mb-5">
           <h3 className="font-semibold tracking-tight">Итоговые баллы по проверкам</h3>

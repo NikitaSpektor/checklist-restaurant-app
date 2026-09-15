@@ -131,6 +131,46 @@ const Index = () => {
     return { zone, score };
   }), [filteredCompleted]);
 
+  // Дегустационные листы считаем отдельно от обычных проверок — своя зона "Дегустация" вне ZONES
+  const tastingChecks = useMemo(() => {
+    return completed.filter((c) => {
+      if (c.kind !== 'tasting') return false;
+      if (statsRestaurant !== 'all' && c.restaurant !== statsRestaurant) return false;
+      if (statsPeriod !== 'all' && c.month !== statsPeriod) return false;
+      return true;
+    });
+  }, [completed, statsRestaurant, statsPeriod]);
+
+  const tastingByRestaurant = useMemo(() => {
+    const map = new Map<string, CompletedCheck[]>();
+    tastingChecks.forEach((c) => {
+      const arr = map.get(c.restaurant) ?? [];
+      arr.push(c);
+      map.set(c.restaurant, arr);
+    });
+    return Array.from(map.entries())
+      .map(([restaurant, checks]) => {
+        const sorted = [...checks].sort((a, b) => (a.checkDate ?? '').localeCompare(b.checkDate ?? '') || a.id - b.id);
+        const avgScore = Number((sorted.reduce((s, c) => s + c.score, 0) / sorted.length).toFixed(1));
+        const totalIssues = sorted.reduce((s, c) => s + (c.issues ?? 0), 0);
+        let trend: number | null = null;
+        if (sorted.length >= 2) {
+          const last = sorted[sorted.length - 1].score;
+          const prevAvg = sorted.slice(0, -1).reduce((s, c) => s + c.score, 0) / (sorted.length - 1);
+          trend = Number((last - prevAvg).toFixed(1));
+        }
+        return { restaurant, count: sorted.length, avgScore, totalIssues, trend };
+      })
+      .sort((a, b) => b.avgScore - a.avgScore);
+  }, [tastingChecks]);
+
+  const tastingSummary = useMemo(() => {
+    const total = tastingChecks.length;
+    const avgScore = total ? Number((tastingChecks.reduce((s, c) => s + c.score, 0) / total).toFixed(1)) : null;
+    const totalIssues = tastingChecks.reduce((s, c) => s + (c.issues ?? 0), 0);
+    return { total, avgScore, totalIssues };
+  }, [tastingChecks]);
+
   const handleComplete = async (c: CompletedCheck) => {
     setCompleted((prev) => {
       const exists = prev.some((x) => x.id === c.id);
@@ -304,6 +344,8 @@ const Index = () => {
             setStatsPeriod={setStatsPeriod}
             stats={stats}
             zoneScores={zoneScores}
+            tastingByRestaurant={tastingByRestaurant}
+            tastingSummary={tastingSummary}
             filteredCompleted={filteredCompleted}
             setViewingCheck={setViewingCheck}
           />
