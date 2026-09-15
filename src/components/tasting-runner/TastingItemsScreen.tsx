@@ -125,7 +125,7 @@ const TastingItemsScreen = ({
                           <Icon name="Plus" size={15} />
                         </button>
                         <button
-                          onClick={() => setDish(d.id, { appearanceOk: d.appearanceOk === false ? null : false, photos: d.appearanceOk === false ? [] : d.photos })}
+                          onClick={() => setDish(d.id, { appearanceOk: d.appearanceOk === false ? null : false })}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                             d.appearanceOk === false ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                           }`}
@@ -143,37 +143,35 @@ const TastingItemsScreen = ({
                       rows={2}
                     />
 
-                    {d.appearanceOk === false && (
-                      <div className="animate-fade-in">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          ref={(el) => (fileRefs.current[d.id] = el)}
-                          onChange={(e) => onFile(d.id, e)}
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          {d.photos.map((photo, pIdx) => (
-                            <div key={pIdx} className="relative inline-block">
-                              <img src={photo} alt="фото блюда" className="h-28 w-28 object-cover rounded-2xl" />
-                              <button
-                                onClick={() => removePhoto(d.id, pIdx)}
-                                className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
-                              >
-                                <Icon name="X" size={14} />
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => fileRefs.current[d.id]?.click()}
-                            className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
-                          >
-                            <Icon name="Camera" size={16} /> {d.photos.length > 0 ? 'Добавить ещё' : 'Прикрепить фото'}
-                          </button>
-                        </div>
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        ref={(el) => (fileRefs.current[d.id] = el)}
+                        onChange={(e) => onFile(d.id, e)}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        {d.photos.map((photo, pIdx) => (
+                          <div key={pIdx} className="relative inline-block">
+                            <img src={photo} alt="фото блюда" className="h-28 w-28 object-cover rounded-2xl" />
+                            <button
+                              onClick={() => removePhoto(d.id, pIdx)}
+                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                            >
+                              <Icon name="X" size={14} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => fileRefs.current[d.id]?.click()}
+                          className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+                        >
+                          <Icon name="Camera" size={16} /> {d.photos.length > 0 ? 'Добавить ещё' : 'Прикрепить фото'}
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
                   {dishes.length > 1 && (
                     <button
