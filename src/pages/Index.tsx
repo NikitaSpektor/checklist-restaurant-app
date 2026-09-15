@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import ChecklistRunner, { RunnerData, CompletedCheck } from '@/components/ChecklistRunner';
+import TastingRunner from '@/components/TastingRunner';
 import CompletedCheckViewer from '@/components/CompletedCheckViewer';
 import ActiveTab from '@/components/index-tabs/ActiveTab';
 import DoneTab from '@/components/index-tabs/DoneTab';
@@ -30,6 +31,7 @@ const uploadPhoto = async (base64: string): Promise<string | null> => {
 const Index = () => {
   const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
+  const [tastingOpen, setTastingOpen] = useState(false);
   const [editingCheck, setEditingCheck] = useState<CompletedCheck | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
@@ -151,7 +153,17 @@ const Index = () => {
             })
           )
         : undefined;
-      toSave = { ...c, itemsDetail } as CompletedCheck;
+      const dishes = c.dishes
+        ? await Promise.all(
+            c.dishes.map(async (dish) => {
+              const photos = await Promise.all(
+                dish.photos.map((p) => (p.startsWith('data:') ? uploadPhoto(p) : Promise.resolve(p)))
+              );
+              return { ...dish, photos: photos.filter((p): p is string => Boolean(p)) };
+            })
+          )
+        : undefined;
+      toSave = { ...c, itemsDetail, dishes } as CompletedCheck;
       await sendCheckToServer(toSave);
     } catch (e) {
       // Нет связи с сервером — сохраняем проверку локально и отправим позже автоматически
@@ -162,7 +174,11 @@ const Index = () => {
 
   const handleEdit = (c: CompletedCheck) => {
     setEditingCheck(c);
-    setRunner(buildRunnerFromCompleted(c));
+    if (c.kind === 'tasting') {
+      setTastingOpen(true);
+    } else {
+      setRunner(buildRunnerFromCompleted(c));
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -178,6 +194,13 @@ const Index = () => {
         <ChecklistRunner
           data={runner}
           onClose={() => { setRunner(null); setEditingCheck(null); }}
+          onComplete={handleComplete}
+          editingCheck={editingCheck ?? undefined}
+        />
+      )}
+      {tastingOpen && (
+        <TastingRunner
+          onClose={() => { setTastingOpen(false); setEditingCheck(null); }}
           onComplete={handleComplete}
           editingCheck={editingCheck ?? undefined}
         />
@@ -266,7 +289,7 @@ const Index = () => {
         )}
 
         {/* Templates */}
-        {tab === 'templates' && <TemplatesTab setRunner={setRunner} />}
+        {tab === 'templates' && <TemplatesTab setRunner={setRunner} setTastingOpen={() => setTastingOpen(true)} />}
 
         {/* Stats */}
         {tab === 'stats' && (

@@ -13,7 +13,7 @@ export const exportChecksToExcel = (checks: CompletedCheck[], fileName = 'Про
     'Балл': c.score,
     'Зачётов': c.okCount ?? '',
     'Всего пунктов': c.totalCount ?? '',
-    'Незачётов': c.issues,
+    'Незачётов / замечаний': c.issues,
     'Депремирование, ₽': c.fine ?? 0,
   }));
 

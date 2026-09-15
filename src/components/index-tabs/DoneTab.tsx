@@ -121,7 +121,9 @@ const DoneTab = ({
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Badge variant="secondary" className="rounded-full font-normal">{c.zone}</Badge>
                 {'issues' in c && c.issues > 0 && (
-                  <span className="text-xs text-destructive font-medium">{c.issues} незачёт</span>
+                  <span className="text-xs text-destructive font-medium">
+                    {c.issues} {'kind' in c && c.kind === 'tasting' ? 'замечани' + (c.issues === 1 ? 'е' : 'я') : 'незачёт'}
+                  </span>
                 )}
                 {'fine' in c && c.fine != null && c.fine > 0 && (
                   <span className="text-xs font-semibold text-destructive bg-destructive/10 rounded-full px-2 py-0.5">

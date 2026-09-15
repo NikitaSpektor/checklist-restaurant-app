@@ -35,6 +35,101 @@ RECIPIENTS = [
 ]
 
 
+def build_html_tasting(report: dict) -> str:
+    """Формирует HTML-письмо на основе данных дегустационного листа."""
+    dishes = report.get("dishes", [])
+    rows = ""
+    for i, d in enumerate(dishes, start=1):
+        appearance = d.get("appearanceOk")
+        if appearance is True:
+            app_badge = '<span style="color:#166534;font-weight:600;">+</span>'
+        elif appearance is False:
+            app_badge = '<span style="color:#991b1b;font-weight:600;">−</span>'
+        else:
+            app_badge = '—'
+        comment = d.get("comment") or "—"
+        photos = d.get("photos") or []
+        photo_html = "".join(
+            f'<img src="{p}" style="margin-top:6px;margin-right:6px;max-width:200px;max-height:150px;border-radius:8px;display:inline-block;" />'
+            for p in photos
+        )
+        if photo_html:
+            photo_html = f"<br>{photo_html}"
+        rows += f"""
+        <tr>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#9c836e;text-align:center;">{i}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:13px;color:#3d2f22;">{d.get("name","")}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("orderTime","") or "—"}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("serveTime","") or "—"}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("prepMinutes","—")}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;text-align:center;">{app_badge}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;font-style:italic;">{comment}{photo_html}</td>
+        </tr>"""
+
+    other_comments = report.get("otherComments") or ""
+    other_block = ""
+    if other_comments:
+        other_block = f"""
+        <div style="margin-top:24px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9c836e;margin-bottom:12px;">Прочие комментарии</div>
+          <div style="background:#f9f5f1;border:1px solid #f0ece6;border-radius:10px;padding:14px 16px;font-size:13px;color:#3d2f22;line-height:1.6;white-space:pre-wrap;">{other_comments}</div>
+        </div>"""
+
+    seating = report.get("seatingPercent")
+    seating_html = f'<div style="font-size:12px;color:#9c836e;margin-top:4px;">Посадка: {seating}%</div>' if seating is not None else ""
+
+    return f"""<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f0eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:720px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+
+    <div style="background:#3d2f22;padding:28px 32px;">
+      <div style="color:#c9a882;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Дегустационный лист</div>
+      <div style="color:#fff;font-size:22px;font-weight:600;">{report.get("title","")}</div>
+      <div style="color:#a88c72;font-size:13px;margin-top:4px;">{report.get("restaurant","")} · {report.get("checkDate","")}</div>
+      {seating_html}
+    </div>
+
+    <div style="display:flex;gap:0;border-bottom:1px solid #f0ece6;">
+      <div style="flex:1;padding:16px 20px;">
+        <div style="font-size:11px;color:#9c836e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Проверяющий</div>
+        <div style="font-size:15px;font-weight:600;color:#3d2f22;">{report.get("by","")}</div>
+      </div>
+      <div style="flex:1;padding:16px 20px;">
+        <div style="font-size:11px;color:#9c836e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Блюд в листе</div>
+        <div style="font-size:15px;font-weight:600;color:#3d2f22;">{len(dishes)}</div>
+      </div>
+    </div>
+
+    <div style="padding:24px 32px;">
+      <table style="width:100%;border-collapse:collapse;border:1px solid #f0ece6;border-radius:10px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f9f5f1;">
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">#</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b5745;font-weight:600;">Блюдо/напиток</th>
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Заказ</th>
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Подача</th>
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Мин.</th>
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Вид</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b5745;font-weight:600;">Комментарий</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+      {other_block}
+    </div>
+
+    <div style="padding:16px 32px;background:#f9f5f1;border-top:1px solid #f0ece6;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:12px;color:#9c836e;">Ресторанный холдинг ICONFOOD</span>
+      <span style="font-size:12px;color:#9c836e;">{report.get("time","")}</span>
+    </div>
+
+  </div>
+</body>
+</html>"""
+
+
 def build_html(report: dict) -> str:
     """Формирует HTML-письмо на основе данных отчёта проверки."""
     score = report.get("score", 0)
@@ -193,8 +288,12 @@ def handler(event: dict, context) -> dict:
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
 
-    html = build_html(report)
-    subject = f"Отчёт: {report.get('title','')} · {report.get('restaurant','')} · {report.get('month','')}"
+    if report.get("kind") == "tasting":
+        html = build_html_tasting(report)
+        subject = f"Дегустационный лист: {report.get('restaurant','')} · {report.get('checkDate','')}"
+    else:
+        html = build_html(report)
+        subject = f"Отчёт: {report.get('title','')} · {report.get('restaurant','')} · {report.get('month','')}"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

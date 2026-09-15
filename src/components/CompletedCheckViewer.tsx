@@ -12,11 +12,13 @@ interface Props {
 
 const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
   const [pdfLoading, setPdfLoading] = useState(false);
+  const isTasting = check.kind === 'tasting';
   const items = check.itemsDetail ?? [];
   const issueItems = items.filter((i) => i.status === 'issue' || i.status === 'issue_no_fine');
   const okCount = check.okCount ?? items.filter((i) => i.status === 'ok').length;
   const totalCount = check.totalCount ?? items.length;
   const score = check.score;
+  const dishes = check.dishes ?? [];
 
   const grouped: { section: string; items: typeof issueItems }[] = [];
   issueItems.forEach((item) => {
@@ -35,6 +37,120 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
       setPdfLoading(false);
     }
   };
+
+  if (isTasting) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
+        <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
+          <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+            <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <p className="font-semibold text-sm">Дегустационный лист</p>
+            <div className="flex items-center gap-2">
+              {onEdit && (
+                <Button variant="outline" className="rounded-full gap-2 h-9 px-4" onClick={() => onEdit(check)}>
+                  <Icon name="Pencil" size={15} />
+                  Изменить
+                </Button>
+              )}
+              <Button className="rounded-full gap-2 h-9 px-4" onClick={handleDownloadPdf} disabled={pdfLoading}>
+                {pdfLoading
+                  ? <><Icon name="Loader" size={15} className="animate-spin" /> Готовим…</>
+                  : <><Icon name="Download" size={15} /> PDF</>
+                }
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto">
+          <div id="print-report" className="max-w-2xl mx-auto px-5 sm:px-8 py-8 space-y-6">
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                <img
+                  src="https://cdn.poehali.dev/projects/da861bac-1ea4-49ae-b39c-72c9841ade32/bucket/0587e8cf-1680-4a82-baf6-adff85516944.png"
+                  alt="ICONFOOD"
+                  className="h-6 sm:h-7 w-auto object-contain mb-2 sm:mb-3"
+                />
+                <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">Дегустационный лист</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1 break-words">
+                  {check.restaurant} · {check.time}
+                </p>
+              </div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums bg-secondary text-secondary-foreground">
+                <span className="text-xl sm:text-2xl leading-none">{dishes.length}</span>
+                <span className="text-[10px] sm:text-[11px] font-normal mt-0.5 opacity-70">блюд</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { icon: 'User', label: 'Проверяющий', value: check.by },
+                { icon: 'Users', label: 'Посадка', value: check.seatingPercent != null ? `${check.seatingPercent}%` : '—' },
+                { icon: 'CircleAlert', label: 'Замечания', value: String(check.issues) },
+              ].map((m) => (
+                <div key={m.label} className="bg-secondary/50 rounded-2xl p-3 sm:p-4">
+                  <Icon name={m.icon} size={16} className="text-muted-foreground mb-2" />
+                  <p className="text-sm sm:text-lg font-semibold tabular-nums leading-tight">{m.value}</p>
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Блюда и напитки</p>
+              <div className="border border-border/70 rounded-2xl overflow-hidden divide-y divide-border/50">
+                {dishes.length === 0 && (
+                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">Нет заполненных блюд</div>
+                )}
+                {dishes.map((d, idx) => (
+                  <div key={d.id} className={`px-4 py-3 ${d.appearanceOk === false ? 'bg-destructive/5' : ''}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5 text-sm">{idx + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{d.name}</span>
+                          <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                            d.appearanceOk === true ? 'bg-primary/10 text-primary' : d.appearanceOk === false ? 'bg-destructive/15 text-destructive' : 'bg-secondary text-muted-foreground'
+                          }`}>
+                            {d.appearanceOk === true ? 'Вид: норма' : d.appearanceOk === false ? 'Вид: замечание' : 'Вид: —'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Заказ {d.orderTime || '—'} · Подача {d.serveTime || '—'}
+                        </p>
+                        {d.comment && <p className="text-sm text-muted-foreground mt-1 italic">«{d.comment}»</p>}
+                        {d.photos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {d.photos.map((photo, pIdx) => (
+                              <img key={pIdx} src={photo} alt="фото блюда" className="h-32 w-auto rounded-xl object-cover" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {check.otherComments && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Прочие комментарии</p>
+                <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{check.otherComments}</p>
+              </div>
+            )}
+
+            <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-muted-foreground">
+              <span>Ресторанный холдинг ICONFOOD</span>
+              <span>{check.time}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">

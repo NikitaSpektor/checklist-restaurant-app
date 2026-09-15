@@ -29,6 +29,40 @@ export interface EditHistoryEntry {
   time: string;
 }
 
+export interface DishRow {
+  id: number;
+  name: string;
+  orderTime: string;
+  serveTime: string;
+  appearanceOk: boolean | null;
+  comment: string;
+  photos: string[];
+}
+
+export const emptyDishRow = (id: number): DishRow => ({
+  id, name: '', orderTime: '', serveTime: '', appearanceOk: null, comment: '', photos: [],
+});
+
+export const calcPrepMinutes = (orderTime: string, serveTime: string): number | null => {
+  if (!orderTime || !serveTime) return null;
+  const [oh, om] = orderTime.split(':').map(Number);
+  const [sh, sm] = serveTime.split(':').map(Number);
+  if ([oh, om, sh, sm].some((n) => Number.isNaN(n))) return null;
+  let diff = (sh * 60 + sm) - (oh * 60 + om);
+  if (diff < 0) diff += 24 * 60;
+  return diff;
+};
+
+export const monthYearFromDate = (dateStr?: string): string => {
+  if (!dateStr) return `${currentMonth} ${currentYear}`;
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return `${currentMonth} ${currentYear}`;
+  const [y, m] = parts;
+  const idx = Number(m) - 1;
+  if (idx < 0 || idx > 11 || Number.isNaN(Number(y))) return `${currentMonth} ${currentYear}`;
+  return `${MONTHS[idx]} ${y}`;
+};
+
 export interface CompletedCheck {
   id: number;
   title: string;
@@ -46,6 +80,11 @@ export interface CompletedCheck {
   itemsDetail?: CompletedCheckItem[];
   finesDistribution?: string;
   editHistory?: EditHistoryEntry[];
+  kind?: 'checklist' | 'tasting';
+  seatingPercent?: number;
+  checkDate?: string;
+  dishes?: DishRow[];
+  otherComments?: string;
 }
 
 export type Status = 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';

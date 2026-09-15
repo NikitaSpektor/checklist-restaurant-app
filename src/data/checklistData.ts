@@ -314,4 +314,17 @@ export const templates = [
   { id: 6, zone: 'Обслуживание гостей', title: 'Чек-лист обслуживания гостей', items: 33, icon: 'Users', color: '35 60% 48%' },
 ];
 
+export const TASTING_ZONE = 'Дегустация';
+export const TASTING_TITLE = 'Дегустационный лист';
+
+export const tastingTemplate = {
+  id: 100,
+  zone: TASTING_ZONE,
+  title: TASTING_TITLE,
+  items: 14,
+  icon: 'UtensilsCrossed',
+  color: '25 55% 45%',
+  kind: 'tasting' as const,
+};
+
 export const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков', 'Обслуживание гостей'];
