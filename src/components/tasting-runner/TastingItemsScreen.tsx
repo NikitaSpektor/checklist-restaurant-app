@@ -46,7 +46,7 @@ const TastingItemsScreen = ({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
       {/* Header */}
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl shrink-0">
+      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl shrink-0 safe-top">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
           <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
             <Icon name="ArrowLeft" size={20} />
@@ -208,7 +208,7 @@ const TastingItemsScreen = ({
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border/60 bg-background/80 backdrop-blur-xl shrink-0">
+      <footer className="border-t border-border/60 bg-background/80 backdrop-blur-xl shrink-0 safe-bottom">
         <div className="max-w-2xl mx-auto px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
           <span className="text-sm text-muted-foreground">{filledCount} из {dishes.length} блюд заполнено</span>
           <Button onClick={onFinish} className="rounded-full px-6 sm:px-8 h-11 gap-2">

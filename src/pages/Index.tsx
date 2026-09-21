@@ -253,7 +253,7 @@ const Index = () => {
         />
       )}
       {/* Header */}
-      <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
+      <header className="border-b border-border/60 sticky top-0 z-20 bg-background/80 backdrop-blur-xl safe-top">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img

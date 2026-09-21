@@ -112,7 +112,7 @@ const TastingReportScreen = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
-      <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
+      <header className="border-b border-border/60 bg-background shrink-0 print:hidden safe-top">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
           <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
             <Icon name="ArrowLeft" size={20} />
@@ -270,7 +270,7 @@ const TastingReportScreen = ({
         </div>
       )}
 
-      <footer className="border-t border-border/60 bg-background shrink-0 print:hidden">
+      <footer className="border-t border-border/60 bg-background shrink-0 print:hidden safe-bottom">
         <div className="max-w-2xl mx-auto px-4 sm:px-8 py-4 flex gap-3">
           <Button variant="outline" className="flex-1 rounded-full h-11" onClick={onClose}>
             Закрыть

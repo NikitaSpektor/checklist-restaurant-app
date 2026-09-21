@@ -102,6 +102,14 @@
   }
 }
 
+/* Отступы под чёлку/индикатор свайпа на iPhone и совместимых Android при запуске как PWA */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 @media print {
   body * {
     visibility: hidden;

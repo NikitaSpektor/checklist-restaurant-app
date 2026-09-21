@@ -41,7 +41,7 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
   if (isTasting) {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
-        <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
+        <header className="border-b border-border/60 bg-background shrink-0 print:hidden safe-top">
           <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
             <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
               <Icon name="ArrowLeft" size={20} />
@@ -154,7 +154,7 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
-      <header className="border-b border-border/60 bg-background shrink-0 print:hidden">
+      <header className="border-b border-border/60 bg-background shrink-0 print:hidden safe-top">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
           <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
             <Icon name="ArrowLeft" size={20} />

@@ -40,7 +40,7 @@ const TastingSetupScreen = ({
 }: TastingSetupScreenProps) => {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
-      <header className="border-b border-border/60 shrink-0">
+      <header className="border-b border-border/60 shrink-0 safe-top">
         <div className="max-w-lg mx-auto px-5 sm:px-8 h-16 flex items-center gap-3">
           <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
             <Icon name="ArrowLeft" size={20} />
@@ -138,7 +138,7 @@ const TastingSetupScreen = ({
         </div>
       </div>
 
-      <footer className="border-t border-border/60 shrink-0">
+      <footer className="border-t border-border/60 shrink-0 safe-bottom">
         <div className="max-w-lg mx-auto px-5 sm:px-8 py-4 space-y-2">
           {canStart && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground px-1 animate-fade-in">
