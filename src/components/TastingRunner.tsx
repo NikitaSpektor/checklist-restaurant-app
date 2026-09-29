@@ -10,6 +10,7 @@ import {
   monthYearFromDate,
   CompletedCheck,
 } from './checklist-runner/types';
+import { TASTING_TITLE, TASTING_ZONE } from '@/data/checklistData';
 
 const DISH_COUNT_DEFAULT = 14;
 const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
@@ -58,9 +59,11 @@ interface TastingRunnerProps {
   onClose: () => void;
   onComplete?: (c: CompletedCheck) => void;
   editingCheck?: CompletedCheck;
+  title?: string;
 }
 
-const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps) => {
+const TastingRunner = ({ onClose, onComplete, editingCheck, title }: TastingRunnerProps) => {
+  const listTitle = editingCheck?.title || title || TASTING_TITLE;
   const draftKey = getDraftKey(editingCheck?.id);
   const draft = loadDraft(draftKey);
   const initialAssignee = parseAssignee(editingCheck?.by);
@@ -132,8 +135,8 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
       : 5;
     onComplete?.({
       id: editingCheck?.id ?? Date.now(),
-      title: 'Дегустационный лист',
-      zone: 'Дегустация',
+      title: listTitle,
+      zone: TASTING_ZONE,
       score,
       by: finalAssignee,
       restaurant,
@@ -155,6 +158,7 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
   if (!started) {
     return (
       <TastingSetupScreen
+        title={listTitle}
         onClose={onClose}
         lastName={lastName}
         setLastName={setLastName}
@@ -179,6 +183,7 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
   if (finished) {
     return (
       <TastingReportScreen
+        title={listTitle}
         onClose={onClose}
         finalAssignee={finalAssignee}
         checkDate={checkDate}
@@ -195,6 +200,7 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
 
   return (
     <TastingItemsScreen
+      title={listTitle}
       onClose={onClose}
       finalAssignee={finalAssignee}
       checkDate={checkDate}

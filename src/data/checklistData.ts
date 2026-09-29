@@ -315,16 +315,37 @@ export const templates = [
 ];
 
 export const TASTING_ZONE = 'Дегустация';
-export const TASTING_TITLE = 'Дегустационный лист';
+export const TASTING_TITLE = 'Дегустационный лист блюд';
 
-export const tastingTemplate = {
-  id: 100,
-  zone: TASTING_ZONE,
-  title: TASTING_TITLE,
-  items: 14,
-  icon: 'UtensilsCrossed',
-  color: '25 55% 45%',
-  kind: 'tasting' as const,
-};
+export const tastingTemplates = [
+  {
+    id: 100,
+    zone: TASTING_ZONE,
+    title: 'Дегустационный лист блюд',
+    items: 14,
+    icon: 'UtensilsCrossed',
+    color: '25 55% 45%',
+    kind: 'tasting' as const,
+  },
+  {
+    id: 101,
+    zone: TASTING_ZONE,
+    title: 'Дегустационный лист десертов',
+    items: 14,
+    icon: 'Cake',
+    color: '340 40% 55%',
+    kind: 'tasting' as const,
+  },
+  {
+    id: 102,
+    zone: TASTING_ZONE,
+    title: 'Дегустационный лист напитков',
+    items: 14,
+    icon: 'GlassWater',
+    color: '170 40% 42%',
+    kind: 'tasting' as const,
+  },
+];
+
 
 export const ZONES = ['Бар', 'Кухня', 'Кондитер', 'Стандарты', 'Оценка напитков', 'Обслуживание гостей'];

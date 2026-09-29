@@ -7,7 +7,7 @@ import ActiveTab from '@/components/index-tabs/ActiveTab';
 import DoneTab from '@/components/index-tabs/DoneTab';
 import TemplatesTab from '@/components/index-tabs/TemplatesTab';
 import StatsTab from '@/components/index-tabs/StatsTab';
-import { Tab, NAV, ZONES, buildRunnerFromCompleted } from '@/data/checklistData';
+import { Tab, NAV, ZONES, TASTING_TITLE, buildRunnerFromCompleted } from '@/data/checklistData';
 import { addToQueue, sendCheckToServer } from '@/lib/offlineQueue';
 import PendingQueueBadge from '@/components/PendingQueueBadge';
 
@@ -32,6 +32,7 @@ const Index = () => {
   const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [tastingOpen, setTastingOpen] = useState(false);
+  const [tastingTitle, setTastingTitle] = useState(TASTING_TITLE);
   const [editingCheck, setEditingCheck] = useState<CompletedCheck | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
@@ -243,6 +244,7 @@ const Index = () => {
     setDetailLoadingId(null);
     setEditingCheck(full);
     if (full.kind === 'tasting') {
+      setTastingTitle(full.title || TASTING_TITLE);
       setTastingOpen(true);
     } else {
       setRunner(buildRunnerFromCompleted(full));
@@ -268,6 +270,7 @@ const Index = () => {
       )}
       {tastingOpen && (
         <TastingRunner
+          title={tastingTitle}
           onClose={() => { setTastingOpen(false); setEditingCheck(null); }}
           onComplete={handleComplete}
           editingCheck={editingCheck ?? undefined}
@@ -358,7 +361,12 @@ const Index = () => {
         )}
 
         {/* Templates */}
-        {tab === 'templates' && <TemplatesTab setRunner={setRunner} setTastingOpen={() => setTastingOpen(true)} />}
+        {tab === 'templates' && (
+          <TemplatesTab
+            setRunner={setRunner}
+            setTastingOpen={(title) => { setTastingTitle(title); setTastingOpen(true); }}
+          />
+        )}
 
         {/* Stats */}
         {tab === 'stats' && (

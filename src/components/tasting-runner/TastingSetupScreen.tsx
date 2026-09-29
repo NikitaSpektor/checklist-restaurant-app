@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RESTAURANTS } from '@/components/checklist-runner/types';
 
 interface TastingSetupScreenProps {
+  title: string;
   onClose: () => void;
   lastName: string;
   setLastName: (v: string) => void;
@@ -25,6 +26,7 @@ interface TastingSetupScreenProps {
 }
 
 const TastingSetupScreen = ({
+  title,
   onClose,
   lastName,
   setLastName,
@@ -51,7 +53,7 @@ const TastingSetupScreen = ({
             <Icon name="ArrowLeft" size={20} />
           </Button>
           <div>
-            <p className="font-semibold text-sm tracking-tight">Дегустационный лист</p>
+            <p className="font-semibold text-sm tracking-tight">{title}</p>
             <p className="text-[11px] text-muted-foreground">{isEditing ? 'Редактирование листа' : 'Данные дегустации'}</p>
           </div>
         </div>

@@ -7,6 +7,7 @@ import PendingQueueBadge from '@/components/PendingQueueBadge';
 import { DishRow, calcPrepMinutes } from '@/components/checklist-runner/types';
 
 interface TastingItemsScreenProps {
+  title: string;
   onClose: () => void;
   finalAssignee: string;
   checkDate: string;
@@ -29,6 +30,7 @@ interface TastingItemsScreenProps {
 }
 
 const TastingItemsScreen = ({
+  title,
   onClose,
   finalAssignee,
   checkDate,
@@ -60,7 +62,7 @@ const TastingItemsScreen = ({
             <Icon name="ArrowLeft" size={20} />
           </Button>
           <div className="flex-1 text-center min-w-0">
-            <p className="font-semibold text-sm tracking-tight truncate">Дегустационный лист</p>
+            <p className="font-semibold text-sm tracking-tight truncate">{title}</p>
             <p className="text-[11px] text-muted-foreground truncate">{finalAssignee} · {checkDate} · {restaurant}</p>
           </div>
           <PendingQueueBadge />

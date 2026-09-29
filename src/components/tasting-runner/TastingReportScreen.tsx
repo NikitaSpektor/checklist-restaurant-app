@@ -6,6 +6,7 @@ import PendingQueueBadge from '@/components/PendingQueueBadge';
 import { DishRow, calcPrepMinutes, ALL_RECIPIENTS, SEND_URL, UPLOAD_URL } from '@/components/checklist-runner/types';
 
 interface TastingReportScreenProps {
+  title: string;
   onClose: () => void;
   finalAssignee: string;
   checkDate: string;
@@ -19,6 +20,7 @@ interface TastingReportScreenProps {
 }
 
 const TastingReportScreen = ({
+  title,
   onClose,
   finalAssignee,
   checkDate,
@@ -87,7 +89,7 @@ const TastingReportScreen = ({
 
       const report = {
         kind: 'tasting',
-        title: 'Дегустационный лист',
+        title,
         restaurant,
         checkDate: dateStr,
         seatingPercent: seatingPercent ? Number(seatingPercent) : null,
@@ -113,7 +115,7 @@ const TastingReportScreen = ({
   const handleDownloadPdf = async () => {
     setPdfLoading(true);
     try {
-      const fileName = `Дегустационный лист · ${restaurant} · ${checkDate}.pdf`;
+      const fileName = `${title} · ${restaurant} · ${checkDate}.pdf`;
       await downloadElementAsPdf('print-tasting-report', fileName);
     } finally {
       setPdfLoading(false);
@@ -149,7 +151,7 @@ const TastingReportScreen = ({
                 alt="ICONFOOD"
                 className="h-6 sm:h-7 w-auto object-contain mb-2 sm:mb-3"
               />
-              <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">Дегустационный лист</h1>
+              <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">{title}</h1>
               <p className="text-muted-foreground text-xs sm:text-sm mt-1 break-words">{restaurant} · {dateStr}</p>
             </div>
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 flex flex-col items-center justify-center font-semibold tabular-nums bg-secondary text-secondary-foreground">

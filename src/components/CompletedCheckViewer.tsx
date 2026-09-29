@@ -46,7 +46,7 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
             <Button variant="ghost" size="icon" className="rounded-full -ml-2" onClick={onClose}>
               <Icon name="ArrowLeft" size={20} />
             </Button>
-            <p className="font-semibold text-sm">Дегустационный лист</p>
+            <p className="font-semibold text-sm truncate max-w-[50%]">{check.title}</p>
             <div className="flex items-center gap-2">
               {onEdit && (
                 <Button variant="outline" className="rounded-full gap-2 h-9 px-4" onClick={() => onEdit(check)}>
@@ -73,7 +73,7 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
                   alt="ICONFOOD"
                   className="h-6 sm:h-7 w-auto object-contain mb-2 sm:mb-3"
                 />
-                <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">Дегустационный лист</h1>
+                <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">{check.title}</h1>
                 <p className="text-muted-foreground text-xs sm:text-sm mt-1 break-words">
                   {check.restaurant} · {check.time}
                 </p>
