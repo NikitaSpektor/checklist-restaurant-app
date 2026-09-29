@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import PendingQueueBadge from '@/components/PendingQueueBadge';
-import { DishRow, calcPrepMinutes } from '@/components/checklist-runner/types';
+import ScoreScale from './ScoreScale';
+import { DishRow, calcPrepMinutes, DISH_CRITERIA, emptyDishScores, dishHasIssue, dishAverageScore, tastingOverallAverage } from '@/components/checklist-runner/types';
 
 interface TastingItemsScreenProps {
   title: string;
@@ -52,6 +53,7 @@ const TastingItemsScreen = ({
   isEditing,
 }: TastingItemsScreenProps) => {
   const filledCount = dishes.filter((d) => d.name.trim()).length;
+  const overallAverage = tastingOverallAverage(dishes.filter((d) => d.name.trim()));
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
@@ -81,7 +83,7 @@ const TastingItemsScreen = ({
               <div
                 key={d.id}
                 className={`bg-card border rounded-3xl p-4 sm:p-5 transition-all ${
-                  d.appearanceOk === false ? 'border-destructive/40' : d.appearanceOk === true ? 'border-primary/30' : 'border-border/70'
+                  dishHasIssue(d) ? 'border-destructive/40' : dishAverageScore(d) != null ? 'border-primary/30' : 'border-border/70'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -115,34 +117,27 @@ const TastingItemsScreen = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 flex-wrap">
-                      {prepMinutes != null ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary rounded-full px-2.5 py-1">
-                          <Icon name="Clock" size={12} /> {prepMinutes} мин приготовления
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Укажите время заказа и подачи</span>
-                      )}
+                    {prepMinutes != null ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary rounded-full px-2.5 py-1">
+                        <Icon name="Clock" size={12} /> {prepMinutes} мин приготовления
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Укажите время заказа и подачи</span>
+                    )}
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-muted-foreground">Внешний вид</span>
-                        <button
-                          onClick={() => setDish(d.id, { appearanceOk: d.appearanceOk === true ? null : true })}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                            d.appearanceOk === true ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
-                          }`}
-                        >
-                          <Icon name="Plus" size={15} />
-                        </button>
-                        <button
-                          onClick={() => setDish(d.id, { appearanceOk: d.appearanceOk === false ? null : false })}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                            d.appearanceOk === false ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
-                          }`}
-                        >
-                          <Icon name="Minus" size={15} />
-                        </button>
-                      </div>
+                    <div className="space-y-2.5 bg-secondary/30 rounded-2xl p-3">
+                      {DISH_CRITERIA.map((c) => (
+                        <div key={c.key} className="flex items-center justify-between gap-3 flex-wrap">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium">{c.label}</p>
+                            {c.hint && <p className="text-[10px] text-muted-foreground">{c.hint}</p>}
+                          </div>
+                          <ScoreScale
+                            value={d.scores?.[c.key] ?? null}
+                            onChange={(v) => setDish(d.id, { scores: { ...(d.scores ?? emptyDishScores()), [c.key]: v } })}
+                          />
+                        </div>
+                      ))}
                     </div>
 
                     <Textarea
@@ -245,6 +240,20 @@ const TastingItemsScreen = ({
               </button>
             </div>
           </div>
+
+          {overallAverage != null && (
+            <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl p-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Средний балл по листу</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">По всем выставленным оценкам</p>
+              </div>
+              <span className={`text-2xl font-semibold tabular-nums ${
+                overallAverage >= 4 ? 'text-primary' : overallAverage >= 3 ? 'text-amber-600' : 'text-destructive'
+              }`}>
+                {overallAverage.toFixed(1)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

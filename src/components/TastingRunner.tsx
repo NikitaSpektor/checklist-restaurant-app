@@ -8,6 +8,8 @@ import {
   emptyDishRow,
   parseAssignee,
   monthYearFromDate,
+  dishHasIssue,
+  tastingOverallAverage,
   CompletedCheck,
 } from './checklist-runner/types';
 import { TASTING_TITLE, TASTING_ZONE } from '@/data/checklistData';
@@ -129,10 +131,9 @@ const TastingRunner = ({ onClose, onComplete, editingCheck, title }: TastingRunn
     setFinished(true);
     clearDraft(draftKey);
     const filledDishes = dishes.filter((d) => d.name.trim());
-    const issues = filledDishes.filter((d) => d.appearanceOk === false).length;
-    const score = filledDishes.length > 0
-      ? Math.max(1, parseFloat((5 - (issues / filledDishes.length) * 4).toFixed(2)))
-      : 5;
+    const issues = filledDishes.filter((d) => dishHasIssue(d)).length;
+    const overallAverage = tastingOverallAverage(filledDishes);
+    const score = overallAverage != null ? Math.max(1, parseFloat(overallAverage.toFixed(2))) : 5;
     onComplete?.({
       id: editingCheck?.id ?? Date.now(),
       title: listTitle,

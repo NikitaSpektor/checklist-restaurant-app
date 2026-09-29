@@ -48,18 +48,34 @@ RECIPIENTS = [
 ]
 
 
+CRITERIA_LABELS = [
+    ("appearance", "Внешний вид"),
+    ("cleanliness", "Чистота и запах посуды"),
+    ("temperature", "Температура подачи"),
+    ("organoleptic", "Органолептика"),
+]
+
+
 def build_html_tasting(report: dict) -> str:
     """Формирует HTML-письмо на основе данных дегустационного листа."""
     dishes = report.get("dishes", [])
     rows = ""
     for i, d in enumerate(dishes, start=1):
-        appearance = d.get("appearanceOk")
-        if appearance is True:
-            app_badge = '<span style="color:#166534;font-weight:600;">+</span>'
-        elif appearance is False:
-            app_badge = '<span style="color:#991b1b;font-weight:600;">−</span>'
+        scores = d.get("scores") or {}
+        score_vals = [v for v in scores.values() if v is not None]
+        avg = round(sum(score_vals) / len(score_vals), 1) if score_vals else None
+        if avg is None:
+            score_badge = '—'
+        elif avg >= 4:
+            score_badge = f'<span style="color:#166534;font-weight:600;">{avg}</span>'
+        elif avg >= 3:
+            score_badge = f'<span style="color:#b45309;font-weight:600;">{avg}</span>'
         else:
-            app_badge = '—'
+            score_badge = f'<span style="color:#991b1b;font-weight:600;">{avg}</span>'
+        scores_lines = "<br>".join(
+            f'{label}: {scores.get(key) if scores.get(key) is not None else "—"}'
+            for key, label in CRITERIA_LABELS
+        )
         comment = d.get("comment") or "—"
         photos = d.get("photos") or []
         photo_html = "".join(
@@ -75,7 +91,8 @@ def build_html_tasting(report: dict) -> str:
           <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("orderTime","") or "—"}</td>
           <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("serveTime","") or "—"}</td>
           <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;text-align:center;">{d.get("prepMinutes","—")}</td>
-          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;text-align:center;">{app_badge}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:11px;color:#6b5745;">{scores_lines}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;text-align:center;">{score_badge}</td>
           <td style="padding:8px 10px;border-bottom:1px solid #f0ece6;font-size:12px;color:#6b5745;font-style:italic;">{comment}{photo_html}</td>
         </tr>"""
 
@@ -105,6 +122,19 @@ def build_html_tasting(report: dict) -> str:
     seating_html = f'<div style="font-size:12px;color:#9c836e;margin-top:4px;">Посадка: {seating}%</div>' if seating is not None else ""
     participants = report.get("participants") or ""
     participants_html = f'<div style="font-size:12px;color:#a88c72;margin-top:4px;">Участники: {participants}</div>' if participants else ""
+
+    overall_average = report.get("overallAverage")
+    if overall_average is None:
+        all_scores = [v for d in dishes for v in (d.get("scores") or {}).values() if v is not None]
+        overall_average = round(sum(all_scores) / len(all_scores), 1) if all_scores else None
+    average_block = ""
+    if overall_average is not None:
+        avg_color = "#2d8a4e" if overall_average >= 4 else "#b45309" if overall_average >= 3 else "#dc2626"
+        average_block = f"""
+        <div style="margin-top:24px;background:#f9f5f1;border:1px solid #f0ece6;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#6b5745;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Средний балл по листу</span>
+          <span style="font-size:26px;font-weight:700;color:{avg_color};">{overall_average}</span>
+        </div>"""
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
@@ -140,7 +170,8 @@ def build_html_tasting(report: dict) -> str:
             <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Заказ</th>
             <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Подача</th>
             <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Мин.</th>
-            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Вид</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b5745;font-weight:600;">Критерии</th>
+            <th style="padding:8px 10px;font-size:11px;color:#6b5745;font-weight:600;">Балл</th>
             <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b5745;font-weight:600;">Комментарий</th>
           </tr>
         </thead>
@@ -148,6 +179,7 @@ def build_html_tasting(report: dict) -> str:
       </table>
       {other_block}
       {receipt_block}
+      {average_block}
     </div>
 
     <div style="padding:16px 32px;background:#f9f5f1;border-top:1px solid #f0ece6;display:flex;justify-content:space-between;align-items:center;">

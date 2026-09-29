@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { CompletedCheck } from '@/components/ChecklistRunner';
 import { downloadElementAsPdf } from '@/lib/pdf';
+import { DISH_CRITERIA, dishHasIssue, dishAverageScore, tastingOverallAverage } from '@/components/checklist-runner/types';
 
 interface Props {
   check: CompletedCheck;
@@ -19,6 +20,7 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
   const totalCount = check.totalCount ?? items.length;
   const score = check.score;
   const dishes = check.dishes ?? [];
+  const tastingAverage = tastingOverallAverage(dishes);
 
   const grouped: { section: string; items: typeof issueItems }[] = [];
   issueItems.forEach((item) => {
@@ -111,34 +113,49 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
                 {dishes.length === 0 && (
                   <div className="px-4 py-6 text-center text-sm text-muted-foreground">Нет заполненных блюд</div>
                 )}
-                {dishes.map((d, idx) => (
-                  <div key={d.id} className={`px-4 py-3 ${d.appearanceOk === false ? 'bg-destructive/5' : ''}`}>
-                    <div className="flex items-start gap-3">
-                      <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5 text-sm">{idx + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{d.name}</span>
-                          <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
-                            d.appearanceOk === true ? 'bg-primary/10 text-primary' : d.appearanceOk === false ? 'bg-destructive/15 text-destructive' : 'bg-secondary text-muted-foreground'
-                          }`}>
-                            {d.appearanceOk === true ? 'Вид: норма' : d.appearanceOk === false ? 'Вид: замечание' : 'Вид: —'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Заказ {d.orderTime || '—'} · Подача {d.serveTime || '—'}
-                        </p>
-                        {d.comment && <p className="text-sm text-muted-foreground mt-1 italic">«{d.comment}»</p>}
-                        {d.photos.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {d.photos.map((photo, pIdx) => (
-                              <img key={pIdx} src={photo} alt="фото блюда" className="h-32 w-auto rounded-xl object-cover" />
-                            ))}
+                {dishes.map((d, idx) => {
+                  const avg = dishAverageScore(d);
+                  return (
+                    <div key={d.id} className={`px-4 py-3 ${dishHasIssue(d) ? 'bg-destructive/5' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5 text-sm">{idx + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{d.name}</span>
+                            {avg != null && (
+                              <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                                avg >= 4 ? 'bg-primary/10 text-primary' : avg >= 3 ? 'bg-amber-500/15 text-amber-600' : 'bg-destructive/15 text-destructive'
+                              }`}>
+                                Балл: {avg.toFixed(1)}
+                              </span>
+                            )}
                           </div>
-                        )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Заказ {d.orderTime || '—'} · Подача {d.serveTime || '—'}
+                          </p>
+                          {d.scores && (
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-2">
+                              {DISH_CRITERIA.map((c) => (
+                                <p key={c.key} className="text-xs text-muted-foreground flex items-center justify-between gap-1">
+                                  <span className="truncate">{c.label}</span>
+                                  <span className="font-medium text-foreground shrink-0">{d.scores?.[c.key] ?? '—'}</span>
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {d.comment && <p className="text-sm text-muted-foreground mt-1 italic">«{d.comment}»</p>}
+                          {d.photos.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {d.photos.map((photo, pIdx) => (
+                                <img key={pIdx} src={photo} alt="фото блюда" className="h-32 w-auto rounded-xl object-cover" />
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -157,6 +174,20 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
                     <img key={pIdx} src={photo} alt="фото чека" className="h-40 w-auto rounded-xl object-cover" />
                   ))}
                 </div>
+              </div>
+            )}
+
+            {tastingAverage != null && (
+              <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl p-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Средний балл по листу</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">По всем выставленным оценкам критериев</p>
+                </div>
+                <span className={`text-3xl font-semibold tabular-nums ${
+                  tastingAverage >= 4 ? 'text-primary' : tastingAverage >= 3 ? 'text-amber-600' : 'text-destructive'
+                }`}>
+                  {tastingAverage.toFixed(1)}
+                </span>
               </div>
             )}
 

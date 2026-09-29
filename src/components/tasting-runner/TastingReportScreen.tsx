@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { downloadElementAsPdf } from '@/lib/pdf';
 import PendingQueueBadge from '@/components/PendingQueueBadge';
-import { DishRow, calcPrepMinutes, ALL_RECIPIENTS, SEND_URL, UPLOAD_URL } from '@/components/checklist-runner/types';
+import { DishRow, calcPrepMinutes, ALL_RECIPIENTS, SEND_URL, UPLOAD_URL, DISH_CRITERIA, dishHasIssue, dishAverageScore, tastingOverallAverage } from '@/components/checklist-runner/types';
 
 interface TastingReportScreenProps {
   title: string;
@@ -38,7 +38,8 @@ const TastingReportScreen = ({
   const [pdfLoading, setPdfLoading] = useState(false);
 
   const filledDishes = dishes.filter((d) => d.name.trim());
-  const issueCount = filledDishes.filter((d) => d.appearanceOk === false).length;
+  const issueCount = filledDishes.filter((d) => dishHasIssue(d)).length;
+  const overallAverage = tastingOverallAverage(filledDishes);
   const dateStr = checkDate
     ? new Date(checkDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
@@ -76,7 +77,7 @@ const TastingReportScreen = ({
             orderTime: d.orderTime,
             serveTime: d.serveTime,
             prepMinutes: calcPrepMinutes(d.orderTime, d.serveTime) ?? '—',
-            appearanceOk: d.appearanceOk,
+            scores: d.scores,
             comment: d.comment || '',
             photos: photos.filter(Boolean),
           };
@@ -99,6 +100,7 @@ const TastingReportScreen = ({
         dishes: dishesWithPhotos,
         otherComments: otherComments || null,
         receiptPhotos: receiptPhotosUploaded.filter(Boolean),
+        overallAverage,
       };
       const res = await fetch(SEND_URL, {
         method: 'POST',
@@ -189,22 +191,35 @@ const TastingReportScreen = ({
               )}
               {filledDishes.map((d, idx) => {
                 const prepMinutes = calcPrepMinutes(d.orderTime, d.serveTime);
+                const avg = dishAverageScore(d);
                 return (
-                  <div key={d.id} className={`px-4 py-3 ${d.appearanceOk === false ? 'bg-destructive/5' : ''}`}>
+                  <div key={d.id} className={`px-4 py-3 ${dishHasIssue(d) ? 'bg-destructive/5' : ''}`}>
                     <div className="flex items-start gap-3">
                       <span className="text-muted-foreground tabular-nums w-5 shrink-0 pt-0.5 text-sm">{idx + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <span className="font-medium text-sm">{d.name}</span>
-                          <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
-                            d.appearanceOk === true ? 'bg-primary/10 text-primary' : d.appearanceOk === false ? 'bg-destructive/15 text-destructive' : 'bg-secondary text-muted-foreground'
-                          }`}>
-                            {d.appearanceOk === true ? 'Вид: норма' : d.appearanceOk === false ? 'Вид: замечание' : 'Вид: —'}
-                          </span>
+                          {avg != null && (
+                            <span className={`shrink-0 font-medium text-xs px-2 py-0.5 rounded-full ${
+                              avg >= 4 ? 'bg-primary/10 text-primary' : avg >= 3 ? 'bg-amber-500/15 text-amber-600' : 'bg-destructive/15 text-destructive'
+                            }`}>
+                              Балл: {avg.toFixed(1)}
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           Заказ {d.orderTime || '—'} · Подача {d.serveTime || '—'} · {prepMinutes != null ? `${prepMinutes} мин` : '—'}
                         </p>
+                        {d.scores && (
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-2">
+                            {DISH_CRITERIA.map((c) => (
+                              <p key={c.key} className="text-xs text-muted-foreground flex items-center justify-between gap-1">
+                                <span className="truncate">{c.label}</span>
+                                <span className="font-medium text-foreground shrink-0">{d.scores?.[c.key] ?? '—'}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
                         {d.comment && <p className="text-sm text-muted-foreground mt-1 italic">«{d.comment}»</p>}
                         {d.photos.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2">
@@ -236,6 +251,20 @@ const TastingReportScreen = ({
                   <img key={pIdx} src={photo} alt="фото чека" className="h-40 w-auto rounded-xl object-cover" />
                 ))}
               </div>
+            </div>
+          )}
+
+          {overallAverage != null && (
+            <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Средний балл по листу</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">По всем выставленным оценкам критериев</p>
+              </div>
+              <span className={`text-3xl font-semibold tabular-nums ${
+                overallAverage >= 4 ? 'text-primary' : overallAverage >= 3 ? 'text-amber-600' : 'text-destructive'
+              }`}>
+                {overallAverage.toFixed(1)}
+              </span>
             </div>
           )}
 

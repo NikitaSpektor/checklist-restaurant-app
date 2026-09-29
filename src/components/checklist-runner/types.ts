@@ -29,19 +29,66 @@ export interface EditHistoryEntry {
   time: string;
 }
 
+export interface DishCriteriaScores {
+  appearance: number | null;
+  cleanliness: number | null;
+  temperature: number | null;
+  organoleptic: number | null;
+}
+
+export const emptyDishScores = (): DishCriteriaScores => ({
+  appearance: null, cleanliness: null, temperature: null, organoleptic: null,
+});
+
+export const DISH_CRITERIA: { key: keyof DishCriteriaScores; label: string; hint: string }[] = [
+  { key: 'appearance', label: 'Внешний вид', hint: 'подача, декор, расположение' },
+  { key: 'cleanliness', label: 'Чистота и запах посуды', hint: '' },
+  { key: 'temperature', label: 'Температура подачи', hint: 'посуда и продукт' },
+  { key: 'organoleptic', label: 'Органолептика', hint: 'свежесть продукта, качество приготовления' },
+];
+
 export interface DishRow {
   id: number;
   name: string;
   orderTime: string;
   serveTime: string;
-  appearanceOk: boolean | null;
+  /** @deprecated используйте scores */
+  appearanceOk?: boolean | null;
+  scores?: DishCriteriaScores;
   comment: string;
   photos: string[];
 }
 
 export const emptyDishRow = (id: number): DishRow => ({
-  id, name: '', orderTime: '', serveTime: '', appearanceOk: null, comment: '', photos: [],
+  id, name: '', orderTime: '', serveTime: '', scores: emptyDishScores(), comment: '', photos: [],
 });
+
+/** Оценки, которые реально проставлены по блюду (без пустых критериев) */
+export const dishFilledScores = (d: DishRow): number[] =>
+  d.scores ? Object.values(d.scores).filter((v): v is number => v != null) : [];
+
+/** Средний балл блюда по заполненным критериям; для старых записей — фолбэк на appearanceOk */
+export const dishAverageScore = (d: DishRow): number | null => {
+  const vals = dishFilledScores(d);
+  if (vals.length) return vals.reduce((a, b) => a + b, 0) / vals.length;
+  if (d.appearanceOk === true) return 5;
+  if (d.appearanceOk === false) return 2;
+  return null;
+};
+
+/** Блюдо считается замечанием, если хотя бы один критерий оценён на 1-2 балла */
+export const dishHasIssue = (d: DishRow): boolean => {
+  const vals = dishFilledScores(d);
+  if (vals.length) return vals.some((v) => v <= 2);
+  return d.appearanceOk === false;
+};
+
+/** Средний балл по ВСЕМ выставленным оценкам всех блюд листа */
+export const tastingOverallAverage = (dishes: DishRow[]): number | null => {
+  const allScores = dishes.flatMap((d) => dishFilledScores(d));
+  if (!allScores.length) return null;
+  return allScores.reduce((a, b) => a + b, 0) / allScores.length;
+};
 
 export const calcPrepMinutes = (orderTime: string, serveTime: string): number | null => {
   if (!orderTime || !serveTime) return null;
