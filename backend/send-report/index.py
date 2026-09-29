@@ -32,6 +32,19 @@ RECIPIENTS = [
     "petrakova@iconfood.ru",
     "shuvalova@iconfood.ru",
     "tarasenko@iconfood.ru",
+    "toktogoraev@iconfood.ru",
+    "korovkin@iconfood.ru",
+    "chekov@iconfood.ru",
+    "deryabin@iconfood.ru",
+    "palchevskaya@iconfood.ru",
+    "anisimov@iconfood.ru",
+    "molodkin@iconfood.ru",
+    "r.litvinov@iconfood.ru",
+    "shigaeva@iconfood.ru",
+    "anikina@iconfood.ru",
+    "osipov@iconfood.ru",
+    "filik@iconfood.ru",
+    "shevchenko@iconfood.ru",
 ]
 
 

@@ -161,6 +161,11 @@ export const ALL_RECIPIENTS = [
   'bozhkova@iconfood.ru', 'akramova@iconfood.ru', 'chernyshev@iconfood.ru',
   'dvoeglazov@blackmarketcafe.ru', 'semyonova@iconfood.ru', 'd.solovyova@iconfood.ru',
   'petrakova@iconfood.ru', 'shuvalova@iconfood.ru', 'tarasenko@iconfood.ru',
+  'toktogoraev@iconfood.ru', 'korovkin@iconfood.ru', 'chekov@iconfood.ru',
+  'deryabin@iconfood.ru', 'palchevskaya@iconfood.ru', 'anisimov@iconfood.ru',
+  'molodkin@iconfood.ru', 'r.litvinov@iconfood.ru', 'shigaeva@iconfood.ru',
+  'anikina@iconfood.ru', 'osipov@iconfood.ru', 'filik@iconfood.ru',
+  'shevchenko@iconfood.ru',
 ];
 
 export const SEND_URL = 'https://functions.poehali.dev/faabce4f-655f-4f86-b4fc-2d9027ac511c';
