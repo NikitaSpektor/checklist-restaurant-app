@@ -141,7 +141,9 @@ const StatsTab = ({
               <p className="text-xs text-muted-foreground mt-0.5">Дегустаций</p>
             </div>
             <div className="bg-secondary/50 rounded-2xl p-4">
-              <p className="text-2xl font-semibold tracking-tight tabular-nums">{tastingSummary.avgScore ?? '—'}</p>
+              <p className={`text-2xl font-semibold tracking-tight tabular-nums ${
+                tastingSummary.avgScore == null ? '' : tastingSummary.avgScore >= 4 ? 'text-primary' : tastingSummary.avgScore >= 3 ? 'text-amber-600' : 'text-destructive'
+              }`}>{tastingSummary.avgScore ?? '—'}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Средний балл</p>
             </div>
             <div className="bg-secondary/50 rounded-2xl p-4">
@@ -166,7 +168,9 @@ const StatsTab = ({
                     {r.trend > 0 ? '+' : ''}{r.trend}
                   </span>
                 )}
-                <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-semibold tabular-nums text-sm bg-card border border-border/60">
+                <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-semibold tabular-nums text-sm border ${
+                  r.avgScore >= 4 ? 'bg-primary/10 text-primary border-primary/20' : r.avgScore >= 3 ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'
+                }`}>
                   {r.avgScore}
                 </div>
               </div>
