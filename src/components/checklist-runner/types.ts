@@ -6,6 +6,7 @@ export interface ChecklistItem {
   hasNa?: boolean;
 }
 
+
 export interface RunnerData {
   title: string;
   zone: string;
