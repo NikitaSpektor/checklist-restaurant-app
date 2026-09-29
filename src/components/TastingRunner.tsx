@@ -14,7 +14,7 @@ import {
 } from './checklist-runner/types';
 import { TASTING_TITLE, TASTING_ZONE } from '@/data/checklistData';
 
-const DISH_COUNT_DEFAULT = 14;
+const DISH_COUNT_DEFAULT = 7;
 const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 interface TastingDraft {
