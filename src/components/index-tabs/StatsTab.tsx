@@ -47,6 +47,7 @@ interface StatsTabProps {
   tastingSummary: TastingSummary;
   filteredCompleted: CompletedCheck[];
   setViewingCheck: (c: CompletedCheck) => void;
+  detailLoadingId?: number | null;
 }
 
 const StatsTab = ({
@@ -64,6 +65,7 @@ const StatsTab = ({
   tastingSummary,
   filteredCompleted,
   setViewingCheck,
+  detailLoadingId,
 }: StatsTabProps) => {
   return (
     <div className="animate-scale-in space-y-6">
@@ -195,7 +197,8 @@ const StatsTab = ({
               <button
                 key={c.id}
                 onClick={() => setViewingCheck(c)}
-                className="w-full flex items-center gap-3 sm:gap-4 rounded-2xl px-3 py-2.5 hover:bg-secondary/50 transition-colors text-left"
+                disabled={detailLoadingId === c.id}
+                className="w-full flex items-center gap-3 sm:gap-4 rounded-2xl px-3 py-2.5 hover:bg-secondary/50 transition-colors text-left disabled:opacity-50"
               >
                 <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-semibold tabular-nums text-sm ${
                   c.score >= 4 ? 'bg-accent text-accent-foreground' : c.score >= 3 ? 'bg-secondary text-secondary-foreground' : 'bg-destructive/10 text-destructive'
@@ -216,7 +219,7 @@ const StatsTab = ({
                     −{c.fine.toLocaleString('ru-RU')} ₽
                   </span>
                 )}
-                <Icon name="ChevronRight" size={16} className="text-muted-foreground shrink-0" />
+                <Icon name={detailLoadingId === c.id ? 'Loader' : 'ChevronRight'} size={16} className={`text-muted-foreground shrink-0 ${detailLoadingId === c.id ? 'animate-spin' : ''}`} />
               </button>
             ))}
           </div>

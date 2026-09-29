@@ -98,6 +98,13 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
               ))}
             </div>
 
+            {check.participants && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Участники дегустации</p>
+                <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{check.participants}</p>
+              </div>
+            )}
+
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Блюда и напитки</p>
               <div className="border border-border/70 rounded-2xl overflow-hidden divide-y divide-border/50">
@@ -139,6 +146,17 @@ const CompletedCheckViewer = ({ check, onClose, onEdit }: Props) => {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Прочие комментарии</p>
                 <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{check.otherComments}</p>
+              </div>
+            )}
+
+            {check.receiptPhotos && check.receiptPhotos.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Фото чека</p>
+                <div className="flex flex-wrap gap-2">
+                  {check.receiptPhotos.map((photo, pIdx) => (
+                    <img key={pIdx} src={photo} alt="фото чека" className="h-40 w-auto rounded-xl object-cover" />
+                  ))}
+                </div>
               </div>
             )}
 

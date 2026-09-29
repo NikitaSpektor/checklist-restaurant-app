@@ -75,8 +75,23 @@ def build_html_tasting(report: dict) -> str:
           <div style="background:#f9f5f1;border:1px solid #f0ece6;border-radius:10px;padding:14px 16px;font-size:13px;color:#3d2f22;line-height:1.6;white-space:pre-wrap;">{other_comments}</div>
         </div>"""
 
+    receipt_photos = report.get("receiptPhotos") or []
+    receipt_block = ""
+    if receipt_photos:
+        receipt_imgs = "".join(
+            f'<img src="{p}" style="margin-top:8px;margin-right:8px;max-width:220px;max-height:280px;border-radius:8px;display:inline-block;" />'
+            for p in receipt_photos
+        )
+        receipt_block = f"""
+        <div style="margin-top:24px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9c836e;margin-bottom:12px;">Фото чека</div>
+          <div>{receipt_imgs}</div>
+        </div>"""
+
     seating = report.get("seatingPercent")
     seating_html = f'<div style="font-size:12px;color:#9c836e;margin-top:4px;">Посадка: {seating}%</div>' if seating is not None else ""
+    participants = report.get("participants") or ""
+    participants_html = f'<div style="font-size:12px;color:#a88c72;margin-top:4px;">Участники: {participants}</div>' if participants else ""
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
@@ -89,6 +104,7 @@ def build_html_tasting(report: dict) -> str:
       <div style="color:#fff;font-size:22px;font-weight:600;">{report.get("title","")}</div>
       <div style="color:#a88c72;font-size:13px;margin-top:4px;">{report.get("restaurant","")} · {report.get("checkDate","")}</div>
       {seating_html}
+      {participants_html}
     </div>
 
     <div style="display:flex;gap:0;border-bottom:1px solid #f0ece6;">
@@ -118,6 +134,7 @@ def build_html_tasting(report: dict) -> str:
         <tbody>{rows}</tbody>
       </table>
       {other_block}
+      {receipt_block}
     </div>
 
     <div style="padding:16px 32px;background:#f9f5f1;border-top:1px solid #f0ece6;display:flex;justify-content:space-between;align-items:center;">

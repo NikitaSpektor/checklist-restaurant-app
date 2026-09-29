@@ -13,6 +13,8 @@ interface TastingReportScreenProps {
   seatingPercent: string;
   dishes: DishRow[];
   otherComments: string;
+  participants: string;
+  receiptPhotos: string[];
   time: string;
 }
 
@@ -24,6 +26,8 @@ const TastingReportScreen = ({
   seatingPercent,
   dishes,
   otherComments,
+  participants,
+  receiptPhotos,
   time,
 }: TastingReportScreenProps) => {
   const [emailOpen, setEmailOpen] = useState(false);
@@ -77,6 +81,10 @@ const TastingReportScreen = ({
         })
       );
 
+      const receiptPhotosUploaded = await Promise.all(
+        receiptPhotos.map((p) => (p.startsWith('data:') ? uploadPhoto(p) : Promise.resolve(p)))
+      );
+
       const report = {
         kind: 'tasting',
         title: 'Дегустационный лист',
@@ -84,9 +92,11 @@ const TastingReportScreen = ({
         checkDate: dateStr,
         seatingPercent: seatingPercent ? Number(seatingPercent) : null,
         by: finalAssignee,
+        participants: participants || null,
         time,
         dishes: dishesWithPhotos,
         otherComments: otherComments || null,
+        receiptPhotos: receiptPhotosUploaded.filter(Boolean),
       };
       const res = await fetch(SEND_URL, {
         method: 'POST',
@@ -162,6 +172,13 @@ const TastingReportScreen = ({
             ))}
           </div>
 
+          {participants && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Участники дегустации</p>
+              <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{participants}</p>
+            </div>
+          )}
+
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Блюда и напитки</p>
             <div className="border border-border/70 rounded-2xl overflow-hidden divide-y divide-border/50">
@@ -206,6 +223,17 @@ const TastingReportScreen = ({
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Прочие комментарии</p>
               <p className="text-sm whitespace-pre-wrap bg-secondary/50 rounded-2xl p-4">{otherComments}</p>
+            </div>
+          )}
+
+          {receiptPhotos.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Фото чека</p>
+              <div className="flex flex-wrap gap-2">
+                {receiptPhotos.map((photo, pIdx) => (
+                  <img key={pIdx} src={photo} alt="фото чека" className="h-40 w-auto rounded-xl object-cover" />
+                ))}
+              </div>
             </div>
           )}
 

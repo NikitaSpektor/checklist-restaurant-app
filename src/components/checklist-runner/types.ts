@@ -85,6 +85,10 @@ export interface CompletedCheck {
   checkDate?: string;
   dishes?: DishRow[];
   otherComments?: string;
+  participants?: string;
+  receiptPhotos?: string[];
+  /** В списке (GET без id) тяжёлые поля не приходят — сервер сообщает лишь факт наличия истории */
+  hasEditHistory?: boolean;
 }
 
 export type Status = 'pending' | 'ok' | 'issue' | 'issue_no_fine' | 'na';

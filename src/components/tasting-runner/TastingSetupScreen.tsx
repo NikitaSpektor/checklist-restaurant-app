@@ -1,6 +1,7 @@
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { RESTAURANTS } from '@/components/checklist-runner/types';
 
 interface TastingSetupScreenProps {
@@ -15,6 +16,8 @@ interface TastingSetupScreenProps {
   setSeatingPercent: (v: string) => void;
   restaurant: string;
   setRestaurant: (v: string) => void;
+  participants: string;
+  setParticipants: (v: string) => void;
   canStart: boolean;
   finalAssignee: string;
   onStart: () => void;
@@ -33,6 +36,8 @@ const TastingSetupScreen = ({
   setSeatingPercent,
   restaurant,
   setRestaurant,
+  participants,
+  setParticipants,
   canStart,
   finalAssignee,
   onStart,
@@ -83,6 +88,18 @@ const TastingSetupScreen = ({
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Участники дегустации */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Участники дегустации</p>
+              <Textarea
+                placeholder="Шеф-повар Иванов, су-шеф Петров, управляющий Сидоров…"
+                value={participants}
+                onChange={(e) => setParticipants(e.target.value)}
+                className="rounded-2xl resize-none"
+                rows={2}
+              />
             </div>
 
             {/* Дата и посадка */}

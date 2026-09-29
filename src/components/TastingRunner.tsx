@@ -20,9 +20,11 @@ interface TastingDraft {
   checkDate: string;
   seatingPercent: string;
   restaurant: string;
+  participants: string;
   started: boolean;
   dishes: DishRow[];
   otherComments: string;
+  receiptPhotos: string[];
   savedAt: number;
 }
 
@@ -68,6 +70,7 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
   const [checkDate, setCheckDate] = useState(draft?.checkDate ?? editingCheck?.checkDate ?? todayIso());
   const [seatingPercent, setSeatingPercent] = useState(draft?.seatingPercent ?? (editingCheck?.seatingPercent != null ? String(editingCheck.seatingPercent) : ''));
   const [restaurant, setRestaurant] = useState(draft?.restaurant ?? editingCheck?.restaurant ?? '');
+  const [participants, setParticipants] = useState(draft?.participants ?? editingCheck?.participants ?? '');
   const [started, setStarted] = useState(draft?.started ?? false);
   const [finished, setFinished] = useState(false);
   const [otherComments, setOtherComments] = useState(draft?.otherComments ?? editingCheck?.otherComments ?? '');
@@ -76,15 +79,17 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
     if (editingCheck?.dishes?.length) return editingCheck.dishes;
     return Array.from({ length: DISH_COUNT_DEFAULT }, (_, i) => emptyDishRow(i + 1));
   });
+  const [receiptPhotos, setReceiptPhotos] = useState<string[]>(draft?.receiptPhotos ?? editingCheck?.receiptPhotos ?? []);
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const receiptFileRef = useRef<HTMLInputElement | null>(null);
 
   const finalAssignee = `${lastName} ${firstName}`.trim();
   const canStart = Boolean(lastName.trim() && firstName.trim() && restaurant && checkDate);
 
   useEffect(() => {
     if (finished) return;
-    saveDraft(draftKey, { lastName, firstName, checkDate, seatingPercent, restaurant, started, dishes, otherComments });
-  }, [draftKey, lastName, firstName, checkDate, seatingPercent, restaurant, started, dishes, otherComments, finished]);
+    saveDraft(draftKey, { lastName, firstName, checkDate, seatingPercent, restaurant, participants, started, dishes, otherComments, receiptPhotos });
+  }, [draftKey, lastName, firstName, checkDate, seatingPercent, restaurant, participants, started, dishes, otherComments, receiptPhotos, finished]);
 
   const setDish = (id: number, patch: Partial<DishRow>) =>
     setDishes((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -105,6 +110,17 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
 
   const removePhoto = (id: number, index: number) =>
     setDishes((rows) => rows.map((r) => (r.id === id ? { ...r, photos: r.photos.filter((_, i) => i !== index) } : r)));
+
+  const onReceiptFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const compressed = await compressFiles(files);
+    setReceiptPhotos((prev) => [...prev, ...compressed]);
+    e.target.value = '';
+  };
+
+  const removeReceiptPhoto = (index: number) =>
+    setReceiptPhotos((prev) => prev.filter((_, i) => i !== index));
 
   const handleFinish = () => {
     setFinished(true);
@@ -131,6 +147,8 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
       checkDate,
       dishes: filledDishes,
       otherComments: otherComments || undefined,
+      participants: participants || undefined,
+      receiptPhotos: receiptPhotos.length ? receiptPhotos : undefined,
     });
   };
 
@@ -148,6 +166,8 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
         setSeatingPercent={setSeatingPercent}
         restaurant={restaurant}
         setRestaurant={setRestaurant}
+        participants={participants}
+        setParticipants={setParticipants}
         canStart={canStart}
         finalAssignee={finalAssignee}
         onStart={() => setStarted(true)}
@@ -166,6 +186,8 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
         seatingPercent={seatingPercent}
         dishes={dishes}
         otherComments={otherComments}
+        participants={participants}
+        receiptPhotos={receiptPhotos}
         time={editingCheck?.time ?? new Date().toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
       />
     );
@@ -186,6 +208,10 @@ const TastingRunner = ({ onClose, onComplete, editingCheck }: TastingRunnerProps
       fileRefs={fileRefs}
       onFile={onFile}
       removePhoto={removePhoto}
+      receiptPhotos={receiptPhotos}
+      receiptFileRef={receiptFileRef}
+      onReceiptFile={onReceiptFile}
+      removeReceiptPhoto={removeReceiptPhoto}
       onFinish={handleFinish}
       isEditing={Boolean(editingCheck)}
     />

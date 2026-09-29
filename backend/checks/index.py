@@ -21,11 +21,39 @@ def handler(event: dict, context) -> dict:
     method = event.get('httpMethod', 'GET')
 
     if method == 'GET':
+        params = event.get('queryStringParameters') or {}
+        check_id = params.get('id')
         conn = get_conn()
         cur = conn.cursor()
+
+        if check_id:
+            # Детальная карточка одной проверки — со всеми тяжёлыми полями (фото, пункты)
+            cur.execute(
+                f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution, edit_history, '
+                f'kind, seating_percent, check_date, dishes, other_comments, participants, receipt_photos '
+                f'FROM {SCHEMA}.completed_checks WHERE id = %s',
+                (int(check_id),)
+            )
+            r = cur.fetchone()
+            cur.close()
+            conn.close()
+            if not r:
+                return {'statusCode': 404, 'headers': cors, 'body': json.dumps({'error': 'not found'})}
+            check = {
+                'id': r[0], 'title': r[1], 'zone': r[2], 'score': float(r[3]), 'by': r[4],
+                'restaurant': r[5], 'month': r[6], 'time': r[7], 'issues': r[8], 'fine': r[9],
+                'okCount': r[10], 'totalCount': r[11], 'itemsDetail': r[12], 'waiter': r[13],
+                'finesDistribution': r[14], 'editHistory': r[15], 'kind': r[16], 'seatingPercent': r[17],
+                'checkDate': r[18].isoformat() if r[18] else None, 'dishes': r[19],
+                'otherComments': r[20], 'participants': r[21], 'receiptPhotos': r[22],
+            }
+            return {'statusCode': 200, 'headers': cors, 'body': json.dumps(check, ensure_ascii=False)}
+
+        # Список — только лёгкие поля для карточек/статистики, без фото и детальных пунктов
         cur.execute(
-            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution, edit_history, '
-            f'kind, seating_percent, check_date, dishes, other_comments '
+            f'SELECT id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, waiter_name, '
+            f'(edit_history IS NOT NULL) as has_edit_history, '
+            f'kind, seating_percent, check_date, other_comments, participants '
             f'FROM {SCHEMA}.completed_checks ORDER BY created_at DESC'
         )
         rows = cur.fetchall()
@@ -46,15 +74,13 @@ def handler(event: dict, context) -> dict:
                 'fine': r[9],
                 'okCount': r[10],
                 'totalCount': r[11],
-                'itemsDetail': r[12],
-                'waiter': r[13],
-                'finesDistribution': r[14],
-                'editHistory': r[15],
-                'kind': r[16],
-                'seatingPercent': r[17],
-                'checkDate': r[18].isoformat() if r[18] else None,
-                'dishes': r[19],
-                'otherComments': r[20],
+                'waiter': r[12],
+                'hasEditHistory': r[13],
+                'kind': r[14],
+                'seatingPercent': r[15],
+                'checkDate': r[16].isoformat() if r[16] else None,
+                'otherComments': r[17],
+                'participants': r[18],
             })
         return {'statusCode': 200, 'headers': cors, 'body': json.dumps(checks, ensure_ascii=False)}
 
@@ -64,14 +90,15 @@ def handler(event: dict, context) -> dict:
         items_detail = json.dumps(c.get('itemsDetail'), ensure_ascii=False) if c.get('itemsDetail') else None
         edit_history = json.dumps(c.get('editHistory'), ensure_ascii=False) if c.get('editHistory') else None
         dishes = json.dumps(c.get('dishes'), ensure_ascii=False) if c.get('dishes') else None
+        receipt_photos = json.dumps(c.get('receiptPhotos'), ensure_ascii=False) if c.get('receiptPhotos') else None
         kind = c.get('kind') or 'checklist'
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
             f'INSERT INTO {SCHEMA}.completed_checks '
             f'(id, title, zone, score, by_name, restaurant, month, time_str, issues, fine, ok_count, total_count, items_detail, waiter_name, fines_distribution, edit_history, '
-            f'kind, seating_percent, check_date, dishes, other_comments) '
-            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+            f'kind, seating_percent, check_date, dishes, other_comments, participants, receipt_photos) '
+            f'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
             f'ON CONFLICT (id) DO UPDATE SET '
             f'title = EXCLUDED.title, zone = EXCLUDED.zone, score = EXCLUDED.score, by_name = EXCLUDED.by_name, '
             f'restaurant = EXCLUDED.restaurant, month = EXCLUDED.month, issues = EXCLUDED.issues, '
@@ -79,13 +106,15 @@ def handler(event: dict, context) -> dict:
             f'items_detail = EXCLUDED.items_detail, waiter_name = EXCLUDED.waiter_name, '
             f'fines_distribution = EXCLUDED.fines_distribution, edit_history = EXCLUDED.edit_history, '
             f'kind = EXCLUDED.kind, seating_percent = EXCLUDED.seating_percent, check_date = EXCLUDED.check_date, '
-            f'dishes = EXCLUDED.dishes, other_comments = EXCLUDED.other_comments, updated_at = NOW()',
+            f'dishes = EXCLUDED.dishes, other_comments = EXCLUDED.other_comments, '
+            f'participants = EXCLUDED.participants, receipt_photos = EXCLUDED.receipt_photos, updated_at = NOW()',
             (
                 c['id'], c['title'], c['zone'], c['score'], c['by'],
                 c['restaurant'], c['month'], c['time'], c['issues'],
                 c.get('fine'), c.get('okCount'), c.get('totalCount'), items_detail,
                 c.get('waiter'), c.get('finesDistribution'), edit_history,
                 kind, c.get('seatingPercent'), c.get('checkDate'), dishes, c.get('otherComments'),
+                c.get('participants'), receipt_photos,
             )
         )
         conn.commit()

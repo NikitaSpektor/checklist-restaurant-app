@@ -18,6 +18,7 @@ interface DoneTabProps {
   setViewingCheck: (c: CompletedCheck) => void;
   handleEdit: (c: CompletedCheck) => void;
   handleDelete: (id: number) => void;
+  detailLoadingId?: number | null;
 }
 
 const DoneTab = ({
@@ -35,6 +36,7 @@ const DoneTab = ({
   setViewingCheck,
   handleEdit,
   handleDelete,
+  detailLoadingId,
 }: DoneTabProps) => {
   return (
     <div className="grid gap-4 animate-scale-in">
@@ -130,7 +132,7 @@ const DoneTab = ({
                     −{c.fine.toLocaleString('ru-RU')} ₽
                   </span>
                 )}
-                {'editHistory' in c && c.editHistory && c.editHistory.length > 0 && (
+                {'hasEditHistory' in c && c.hasEditHistory && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
                     <Icon name="History" size={11} />изменено
                   </span>
@@ -148,16 +150,18 @@ const DoneTab = ({
           <div className="flex flex-col items-center gap-2 shrink-0">
             <button
               onClick={() => setViewingCheck(c as CompletedCheck)}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              disabled={detailLoadingId === c.id}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
               title="Просмотр"
             >
-              <Icon name="Eye" size={14} />
+              <Icon name={detailLoadingId === c.id ? 'Loader' : 'Eye'} size={14} className={detailLoadingId === c.id ? 'animate-spin' : ''} />
             </button>
             {'id' in c && completed.some((x) => x.id === c.id) && (
               <>
                 <button
                   onClick={() => handleEdit(c as CompletedCheck)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  disabled={detailLoadingId === c.id}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
                   title="Редактировать"
                 >
                   <Icon name="Pencil" size={14} />

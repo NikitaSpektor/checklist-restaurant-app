@@ -34,9 +34,29 @@ const Index = () => {
   const [tastingOpen, setTastingOpen] = useState(false);
   const [editingCheck, setEditingCheck] = useState<CompletedCheck | null>(null);
   const [viewingCheck, setViewingCheck] = useState<CompletedCheck | null>(null);
+  const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
   const [completed, setCompleted] = useState<CompletedCheck[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+
+  // Список содержит только лёгкие поля — полные данные (фото, пункты, блюда) догружаем по id
+  const fetchCheckDetail = useCallback(async (id: number): Promise<CompletedCheck | null> => {
+    try {
+      const res = await fetch(`${CHECKS_URL}?id=${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const openViewingCheck = useCallback(async (c: CompletedCheck) => {
+    setDetailLoadingId(c.id);
+    const full = await fetchCheckDetail(c.id);
+    setDetailLoadingId(null);
+    setViewingCheck(full ?? c);
+  }, [fetchCheckDetail]);
 
   const fetchChecks = useCallback(async (attempt = 1) => {
     try {
@@ -203,7 +223,12 @@ const Index = () => {
             })
           )
         : undefined;
-      toSave = { ...c, itemsDetail, dishes } as CompletedCheck;
+      const receiptPhotos = c.receiptPhotos
+        ? (await Promise.all(
+            c.receiptPhotos.map((p) => (p.startsWith('data:') ? uploadPhoto(p) : Promise.resolve(p)))
+          )).filter((p): p is string => Boolean(p))
+        : undefined;
+      toSave = { ...c, itemsDetail, dishes, receiptPhotos } as CompletedCheck;
       await sendCheckToServer(toSave);
     } catch (e) {
       // Нет связи с сервером — сохраняем проверку локально и отправим позже автоматически
@@ -212,12 +237,15 @@ const Index = () => {
     }
   };
 
-  const handleEdit = (c: CompletedCheck) => {
-    setEditingCheck(c);
-    if (c.kind === 'tasting') {
+  const handleEdit = async (c: CompletedCheck) => {
+    setDetailLoadingId(c.id);
+    const full = (await fetchCheckDetail(c.id)) ?? c;
+    setDetailLoadingId(null);
+    setEditingCheck(full);
+    if (full.kind === 'tasting') {
       setTastingOpen(true);
     } else {
-      setRunner(buildRunnerFromCompleted(c));
+      setRunner(buildRunnerFromCompleted(full));
     }
   };
 
@@ -322,9 +350,10 @@ const Index = () => {
             setDoneZoneFilter={setDoneZoneFilter}
             doneMonthFilter={doneMonthFilter}
             setDoneMonthFilter={setDoneMonthFilter}
-            setViewingCheck={setViewingCheck}
+            setViewingCheck={openViewingCheck}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
+            detailLoadingId={detailLoadingId}
           />
         )}
 
@@ -347,7 +376,8 @@ const Index = () => {
             tastingByRestaurant={tastingByRestaurant}
             tastingSummary={tastingSummary}
             filteredCompleted={filteredCompleted}
-            setViewingCheck={setViewingCheck}
+            setViewingCheck={openViewingCheck}
+            detailLoadingId={detailLoadingId}
           />
         )}
       </main>

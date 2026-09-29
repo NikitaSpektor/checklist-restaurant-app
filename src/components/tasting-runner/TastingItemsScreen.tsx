@@ -20,6 +20,10 @@ interface TastingItemsScreenProps {
   fileRefs: MutableRefObject<Record<number, HTMLInputElement | null>>;
   onFile: (id: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   removePhoto: (id: number, index: number) => void;
+  receiptPhotos: string[];
+  receiptFileRef: MutableRefObject<HTMLInputElement | null>;
+  onReceiptFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  removeReceiptPhoto: (index: number) => void;
   onFinish: () => void;
   isEditing: boolean;
 }
@@ -38,6 +42,10 @@ const TastingItemsScreen = ({
   fileRefs,
   onFile,
   removePhoto,
+  receiptPhotos,
+  receiptFileRef,
+  onReceiptFile,
+  removeReceiptPhoto,
   onFinish,
   isEditing,
 }: TastingItemsScreenProps) => {
@@ -203,6 +211,37 @@ const TastingItemsScreen = ({
               className="rounded-2xl resize-none bg-background border-border/70"
               rows={3}
             />
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Фото чека</p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              ref={receiptFileRef}
+              onChange={onReceiptFile}
+            />
+            <div className="flex flex-wrap gap-2">
+              {receiptPhotos.map((photo, pIdx) => (
+                <div key={pIdx} className="relative inline-block">
+                  <img src={photo} alt="фото чека" className="h-28 w-28 object-cover rounded-2xl" />
+                  <button
+                    onClick={() => removeReceiptPhoto(pIdx)}
+                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                  >
+                    <Icon name="X" size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => receiptFileRef.current?.click()}
+                className="flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+              >
+                <Icon name="Receipt" size={16} /> {receiptPhotos.length > 0 ? 'Добавить ещё' : 'Прикрепить фото чека'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
