@@ -3,11 +3,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-const LOGIN = 'Iconfood_Audit';
-const PASSWORD = '2501Iconfood';
+const ACCOUNTS: { login: string; password: string; role: 'admin' | 'tasting' }[] = [
+  { login: 'Iconfood_Audit', password: '2501Iconfood', role: 'admin' },
+  { login: 'Tasting_Iconfood', password: '1905Iconfood', role: 'tasting' },
+];
 const STORAGE_KEY = 'auth_session';
+const ROLE_KEY = 'auth_role';
 
 export const isAuthenticated = () => sessionStorage.getItem(STORAGE_KEY) === '1';
+export const isTastingOnlyUser = () => sessionStorage.getItem(ROLE_KEY) === 'tasting';
 
 interface Props {
   onAuth: () => void;
@@ -22,8 +26,10 @@ const LoginScreen = ({ onAuth }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (login === LOGIN && password === PASSWORD) {
+    const account = ACCOUNTS.find((a) => a.login === login && a.password === password);
+    if (account) {
       sessionStorage.setItem(STORAGE_KEY, '1');
+      sessionStorage.setItem(ROLE_KEY, account.role);
       onAuth();
     } else {
       setError(true);

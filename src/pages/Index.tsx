@@ -10,6 +10,7 @@ import StatsTab from '@/components/index-tabs/StatsTab';
 import { Tab, NAV, ZONES, TASTING_TITLE, buildRunnerFromCompleted } from '@/data/checklistData';
 import { addToQueue, sendCheckToServer } from '@/lib/offlineQueue';
 import PendingQueueBadge from '@/components/PendingQueueBadge';
+import { isTastingOnlyUser } from '@/components/LoginScreen';
 
 const UPLOAD_URL = 'https://functions.poehali.dev/28ba2203-7a14-4242-9412-4c6aff414ec8';
 const CHECKS_URL = 'https://functions.poehali.dev/55af8c36-e1fb-42d6-97d4-ae006e9cd3f2';
@@ -29,6 +30,11 @@ const uploadPhoto = async (base64: string): Promise<string | null> => {
 };
 
 const Index = () => {
+  const tastingOnly = isTastingOnlyUser();
+  const visibleChecks = useCallback(
+    (list: CompletedCheck[]) => (tastingOnly ? list.filter((c) => c.kind === 'tasting') : list),
+    [tastingOnly],
+  );
   const [tab, setTab] = useState<Tab>('templates');
   const [runner, setRunner] = useState<RunnerData | null>(null);
   const [tastingOpen, setTastingOpen] = useState(false);
@@ -66,7 +72,7 @@ const Index = () => {
       const raw = await res.json();
       const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (!Array.isArray(data)) throw new Error('Некорректный ответ сервера');
-      setCompleted(data);
+      setCompleted(visibleChecks(data));
       setLoadError(false);
       try { localStorage.setItem('completed_checks', JSON.stringify(data)); } catch { /* переполнено */ }
       setLoading(false);
@@ -78,12 +84,12 @@ const Index = () => {
       // Сервер недоступен — не затираем уже показанный список, используем последний известный кэш
       try {
         const saved = localStorage.getItem('completed_checks');
-        if (saved) setCompleted(JSON.parse(saved));
+        if (saved) setCompleted(visibleChecks(JSON.parse(saved)));
       } catch { /* ignore */ }
       setLoadError(true);
       setLoading(false);
     }
-  }, []);
+  }, [visibleChecks]);
 
   useEffect(() => { fetchChecks(); }, [fetchChecks]);
 
@@ -364,6 +370,7 @@ const Index = () => {
         {tab === 'templates' && (
           <TemplatesTab
             setRunner={setRunner}
+            tastingOnly={tastingOnly}
             setTastingOpen={(title) => { setTastingTitle(title); setTastingOpen(true); }}
           />
         )}

@@ -5,12 +5,13 @@ import { templates, tastingTemplates, buildRunner } from '@/data/checklistData';
 interface TemplatesTabProps {
   setRunner: (data: RunnerData) => void;
   setTastingOpen: (title: string) => void;
+  tastingOnly?: boolean;
 }
 
-const TemplatesTab = ({ setRunner, setTastingOpen }: TemplatesTabProps) => {
+const TemplatesTab = ({ setRunner, setTastingOpen, tastingOnly }: TemplatesTabProps) => {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-scale-in">
-      {templates.map((t) => (
+      {!tastingOnly && templates.map((t) => (
         <div
           key={t.id}
           onClick={() => setRunner(buildRunner(t.zone, t.title))}
@@ -48,10 +49,10 @@ const TemplatesTab = ({ setRunner, setTastingOpen }: TemplatesTabProps) => {
           </div>
         </div>
       ))}
-      <button className="border-2 border-dashed border-border rounded-3xl p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors min-h-[150px]">
+      {!tastingOnly && <button className="border-2 border-dashed border-border rounded-3xl p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors min-h-[150px]">
         <Icon name="Plus" size={24} />
         <span className="text-sm font-medium">Создать шаблон</span>
-      </button>
+      </button>}
     </div>
   );
 };
