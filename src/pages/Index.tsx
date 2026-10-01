@@ -286,7 +286,7 @@ const Index = () => {
         <CompletedCheckViewer
           check={viewingCheck}
           onClose={() => setViewingCheck(null)}
-          onEdit={(c) => { setViewingCheck(null); handleEdit(c); }}
+          onEdit={tastingOnly ? undefined : (c) => { setViewingCheck(null); handleEdit(c); }}
         />
       )}
       {/* Header */}
@@ -362,6 +362,7 @@ const Index = () => {
             setViewingCheck={openViewingCheck}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
+            readOnly={tastingOnly}
             detailLoadingId={detailLoadingId}
           />
         )}

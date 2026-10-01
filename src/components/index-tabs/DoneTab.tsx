@@ -18,6 +18,7 @@ interface DoneTabProps {
   setViewingCheck: (c: CompletedCheck) => void;
   handleEdit: (c: CompletedCheck) => void;
   handleDelete: (id: number) => void;
+  readOnly?: boolean;
   detailLoadingId?: number | null;
 }
 
@@ -36,6 +37,7 @@ const DoneTab = ({
   setViewingCheck,
   handleEdit,
   handleDelete,
+  readOnly,
   detailLoadingId,
 }: DoneTabProps) => {
   return (
@@ -156,7 +158,7 @@ const DoneTab = ({
             >
               <Icon name={detailLoadingId === c.id ? 'Loader' : 'Eye'} size={14} className={detailLoadingId === c.id ? 'animate-spin' : ''} />
             </button>
-            {'id' in c && completed.some((x) => x.id === c.id) && (
+            {!readOnly && 'id' in c && completed.some((x) => x.id === c.id) && (
               <>
                 <button
                   onClick={() => handleEdit(c as CompletedCheck)}
