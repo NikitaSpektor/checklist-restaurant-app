@@ -309,7 +309,7 @@ export const templates = [
   { id: 1, zone: 'Бар', title: 'Чек-лист бара', items: 33, icon: 'Wine', color: '280 30% 50%' },
   { id: 2, zone: 'Кухня', title: 'Чек-лист кухни', items: 44, icon: 'CookingPot', color: '16 45% 48%' },
   { id: 3, zone: 'Кондитер', title: 'Чек-лист кондитера', items: 34, icon: 'Cake', color: '340 40% 55%' },
-  { id: 4, zone: 'Стандарты', title: 'Чек-лист Зал', items: 79, icon: 'BadgeCheck', color: '200 40% 45%' },
+  { id: 4, zone: 'Стандарты', title: 'Чек-лист Зал', items: 83, icon: 'BadgeCheck', color: '200 40% 45%' },
   { id: 5, zone: 'Оценка напитков', title: 'Оценка качества напитков', items: 25, icon: 'GlassWater', color: '170 40% 42%' },
   { id: 6, zone: 'Обслуживание гостей', title: 'Чек-лист обслуживания гостей', items: 33, icon: 'Users', color: '35 60% 48%' },
 ];
