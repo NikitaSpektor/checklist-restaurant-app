@@ -141,7 +141,7 @@ const DoneTab = ({
                 )}
               </div>
               <h3 className="font-semibold tracking-tight">{c.title}</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">{c.by} · {c.time}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{c.by}</p>
               {'restaurant' in c && c.restaurant && (
                 <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                   <Icon name="MapPin" size={11} />{c.restaurant}
